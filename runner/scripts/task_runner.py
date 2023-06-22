@@ -820,6 +820,7 @@ class Runner:
                         logs=logs,
                         output=output,
                         host=app.config["WEB_HOST"],
+                        org=app.config["ORG_NAME"],
                     ),
                     short_message=self.task.email_completion_message
                     or f"Atlas Hub job {self.task} completed successfully.",

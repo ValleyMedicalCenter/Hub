@@ -110,6 +110,8 @@ class RunnerException(Exception):
                         success=0,
                         date=date,
                         logs=logs,
+                        host=app.config["WEB_HOST"],
+                        org=app.config["ORG_NAME"],
                     ),
                     short_message=task.email_error_message
                     or f"Atlas Hub task {task} failed.",

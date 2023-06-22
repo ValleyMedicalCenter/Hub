@@ -239,6 +239,8 @@ def send_email(run_id: int, file_id: int) -> dict:
                 success=1,
                 date=date,
                 logs=[],
+                host=app.config["WEB_HOST"],
+                org=app.config["ORG_NAME"],
             ),
             attachments=[x.name for x in downloaded_files],
         )
