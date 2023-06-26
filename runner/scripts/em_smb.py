@@ -134,7 +134,6 @@ class Smb:
 
         if self.connection is not None:
             self.share_name = str(self.connection.share_name).strip("/").strip("\\")
-            self.subfolder = self.connection.subfolder
             self.username = self.connection.username
             self.password = self.connection.password
             self.server_ip = self.connection.server_ip
