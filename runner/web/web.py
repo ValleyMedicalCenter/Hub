@@ -222,7 +222,7 @@ def send_email(run_id: int, file_id: int) -> dict:
 
         # send the file
 
-        date = str(datetime.datetime.now())
+        date = datetime.datetime.now()
 
         template = env.get_template("email/email.html.j2")
 
@@ -236,12 +236,7 @@ def send_email(run_id: int, file_id: int) -> dict:
             + " / Task: "
             + task.name,
             message=template.render(
-                task=task,
-                success=1,
-                date=date,
-                logs=[],
-                host=app.config["WEB_HOST"],
-                org=app.config["ORG_NAME"],
+                task=task, success=1, date=date, logs=[], org=app.config["ORG_NAME"]
             ),
             attachments=[x.name for x in downloaded_files],
         )

@@ -815,7 +815,7 @@ class Runner:
             .all()
         )
 
-        date = str(datetime.datetime.now())
+        date = datetime.datetime.now()
 
         # pylint: disable=broad-except
         try:
