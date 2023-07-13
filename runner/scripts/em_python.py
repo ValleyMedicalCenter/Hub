@@ -193,6 +193,7 @@ class PyProcesser:
                     "dateutil": "python-dateutil",
                     "smb": "pysmb",
                     "dotenv": "python-dotenv",
+                    "azure": "azure-devops",
                 }
 
                 # clean list
