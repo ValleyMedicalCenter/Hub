@@ -456,7 +456,7 @@ def task_edit_post(task_id: int) -> Response:
             processing_ftp_file=form.get("processingFtpFile", None, type=str),
             processing_ftp_id=form.get("task-processing-ftp", None, type=int),
             processing_git=form.get("processingGit", None, type=str),
-            processing_devpps=form.get("processingDevops", None, type=str),
+            processing_devops=form.get("processingDevops", None, type=str),
             processing_url=form.get("processingUrl", None, type=str),
             processing_code=form.get("processingCode", None, type=str),
             processing_command=form.get("processingCommand", None, type=str),
