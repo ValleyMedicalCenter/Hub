@@ -691,6 +691,7 @@ class Task(db.Model):
     source_query_type_id: Optional[int] = None
     source_query_include_header: Optional[int] = None
     source_git: Optional[str] = None
+    source_devops: Optional[str] = None
     source_url: Optional[str] = None
     source_code: Optional[str] = None
 
@@ -736,6 +737,7 @@ class Task(db.Model):
     processing_code: Optional[str] = None
     processing_url: Optional[str] = None
     processing_git: Optional[str] = None
+    processing_devops: Optional[str] = None
     processing_command: Optional[str] = None
 
     # destination
@@ -815,7 +817,7 @@ class Task(db.Model):
 
     # source locations
 
-    # git/url/code/sftp/ftp/smb
+    # git/url/code/sftp/ftp/smb/devops
     source_query_type_id = db.Column(
         db.Integer, db.ForeignKey(TaskSourceQueryType.id), nullable=True, index=True
     )
@@ -825,6 +827,8 @@ class Task(db.Model):
     # source git
     source_git = db.Column(db.String(1000), nullable=True)
 
+    # source devops
+    source_devops = db.Column(db.String(1000), nullable=True)
     # source web url
     source_url = db.Column(db.String(1000), nullable=True)
 
@@ -909,7 +913,7 @@ class Task(db.Model):
     processing_code = db.Column(db.String(8000), nullable=True)
     processing_url = db.Column(db.String(1000), nullable=True)
     processing_git = db.Column(db.String(1000), nullable=True)
-
+    processing_devops = db.Column(db.String(1000), nullable=True)
     processing_command = db.Column(db.String(1000), nullable=True)
 
     """ destination """

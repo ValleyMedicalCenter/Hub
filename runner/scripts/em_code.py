@@ -14,6 +14,10 @@ from runner.model import Task
 from runner.scripts.em_messages import RunnerException, RunnerLog
 from runner.scripts.em_params import ParamLoader
 
+import azure.devops.credentials as cd
+from azure.devops.connection import Connection
+
+
 urllib3.disable_warnings()  # type: ignore
 
 
@@ -40,6 +44,114 @@ class SourceCode:
 
         self.query: str = ""
         self.refresh_cache = refresh_cache
+
+    def devops(self, url: str) -> str:
+        """get source code from azure devops using authentication"""
+        if url:
+            try:
+                token = app.config["DEVOPS_TOKEN"]
+                creds = cd.BasicAuthentication('',token)
+                connection = Connection(base_url=app.config["DEVOPS_URL"],creds=creds)
+                # Get a client (the "core" client provides access to projects, teams, etc)
+                core_client = connection.clients.get_core_client()
+
+                get_projects_response = core_client.get_projects()
+
+                git = connection.clients.get_git_client()
+
+
+                #get the org, project and repository from the url
+                orgName = re.findall(r"\.(?:com)\/(.+?)\/", url)
+                project = re.findall(rf"\.(?:com\/{orgName[0]})\/(.+?)\/", url)
+                repoName = re.findall(rf"\.(?:com\/{orgName[0]}\/{project[0]}\/_git)\/(.+?)\?", url)
+                #need this to get the projects id
+                projects = [i for i in get_projects_response if (i.name == project[0])]
+
+                #this for repository id.
+                repos = git.get_repositories([i for i in projects if (i.name == repoName[0])][0].id)
+                repo_id = [i.id for i in repos][0]
+
+                path = url.split("path=/")
+                item = git.get_item_content(repository_id = repo_id,path=urllib.parse.unquote(path[1]))
+                text = [x for x in item][0]
+                if url.lower().endswith(".sql"):
+                    self.query = text
+                    self.db_type = (
+                        "mssql"
+                        if self.task.source_database_conn
+                        and self.task.source_database_conn.type_id == 2
+                        else None
+                    )
+
+                    # save query cache before cleanup.
+                    if self.run_id or self.refresh_cache:
+                        self.task.source_cache = self.query
+                        db.session.commit()
+
+                        if self.refresh_cache:
+                            RunnerLog(
+                                self.task,
+                                self.run_id,
+                                15,
+                                "Source cache manually refreshed.",
+                            )
+                     # insert params
+                    return self.cleanup()
+
+                return (
+                    text
+                    if not text.startswith("<!DOCTYPE")
+                    else "Visit URL to view code"
+                )
+
+            # pylint: disable=broad-except
+            except BaseException as e:
+                # only use cache if we have a run id. Otherwise failures are from code preview.
+                if (
+                    self.run_id
+                    and self.task.enable_source_cache == 1
+                    and self.task.source_cache
+                ):
+                    RunnerLog(
+                        self.task,
+                        self.run_id,
+                        15,
+                        f"Failed to get source from {url}. Using cached query.\nFull trace:\n{e}",
+                    )
+
+                    self.db_type = (
+                        "mssql"
+                        if self.task.source_database_conn
+                        and self.task.source_database_conn.type_id == 2
+                        else None
+                    )
+
+                    self.query = self.task.source_cache
+                    return self.cleanup()
+
+                elif (
+                    self.run_id
+                    and self.task.enable_source_cache == 1
+                    and not self.task.source_cache
+                ):
+                    raise RunnerException(
+                        self.task,
+                        self.run_id,
+                        15,
+                        f"Failed to get source from {url}. Cache enabled, but no cache available.\n{e}",
+                    )
+                else:
+                    raise RunnerException(
+                        self.task,
+                        self.run_id,
+                        15,
+                        f"Failed to get source from {url}.\n{e}",
+                    )
+
+        raise RunnerException(
+            self.task, self.run_id, 15, "No url specified to get source from."
+        )
+
 
     def gitlab(self, url: str) -> str:
         """Get source code from gitlab using authentication."""

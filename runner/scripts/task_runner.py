@@ -12,7 +12,8 @@ import time
 import urllib.parse
 from pathlib import Path
 from typing import IO, List, Optional
-
+import azure.devops.credentials as cd
+from azure.devops.connection import Connection
 import requests
 from flask import current_app as app
 from jinja2 import Environment, PackageLoader, select_autoescape
@@ -352,6 +353,9 @@ class Runner:
         elif self.task.source_query_type_id == 1:  # gitlab url
             query = self.source_loader.gitlab(self.task.source_git)
 
+        elif self.task.source_query_type_id == 7:  # devops url
+            query = self.source_loader.devops(self.task.source_devops)
+
         elif self.task.source_query_type_id == 4:  # code
             query = self.source_loader.source()
 
@@ -389,6 +393,7 @@ class Runner:
         # 4 = git url
         # 5 = other url
         # 6 = source code
+        # 7 = devops url
 
         processing_script_name = self.temp_path / (self.run_id + ".py")
 
@@ -558,6 +563,61 @@ class Runner:
             self.task.processing_type_id == 6 and self.task.processing_code is not None
         ):
             my_file = self.task.processing_code
+
+        elif self.task.processing_type_id == 7 and self.task.processing_devops is not None:
+            # if a dir is specified then download all files
+            if (
+                self.task.processing_command is not None
+                and self.task.processing_command != ""
+            ):
+                try:
+                    token = app.config["DEVOPS_TOKEN"]
+                    creds = cd.BasicAuthentication('',token)
+                    connection = Connection(base_url=app.config["DEVOPS_URL"],creds=creds)
+                    # Get a client (the "core" client provides access to projects, teams, etc)
+                    core_client = connection.clients.get_core_client()
+
+                    get_projects_response = core_client.get_projects()
+
+                    git = connection.clients.get_git_client()
+
+
+                    #get the org, project and repository from the url
+                    orgName = re.findall(r"\.(?:com)\/(.+?)\/", url)
+                    project = re.findall(rf"\.(?:com\/{orgName[0]})\/(.+?)\/", url)
+                    repoName = re.findall(rf"\.(?:com\/{orgName[0]}\/{project[0]}\/_git)\/(.+?)\?", url)
+                    #need this to get the projects id
+                    projects = [i for i in get_projects_response if (i.name == project[0])]
+
+                    #this for repository id.
+                    repos = git.get_repositories([i for i in projects if (i.name == repoName[0])][0].id)
+                    repo_id = [i.id for i in repos][0]
+
+                    path = url.split("path=/")
+                    item = git.get_items(repository_id = repo_id, scope_path =  urllib.parse.unquote(path[1]))
+                    for i in item:
+
+                            if i.is_folder is not None:
+                                tree = git.get_tree(repository_id = repo_id,sha1=i.object_id)
+
+                                for ob in tree.tree_entries:
+
+                                    obj = git.get_blob_content(repository_id = repo_id,sha1=ob.object_id,download=True)
+
+                                    with open(str(self.temp_path) +"\\"+ ob.relative_path,'wb') as f:
+                                            for code in obj:
+                                                 f.write(code)
+                    
+
+                # pylint: disable=broad-except
+                except BaseException:
+                    raise RunnerException(
+                        self.task, self.run_id, 8, "Processor failed to connect to devops repo."
+                    )
+
+            # otherwise get py file
+            else:
+                my_file = self.source_loader.devops(self.task.processing_devops)
         elif self.task.processing_type_id > 0:
             raise RunnerException(
                 self.task,
