@@ -68,12 +68,14 @@ class SourceCode:
                 projects = [i for i in get_projects_response if (i.name == project[0])]
 
                 #this for repository id.
-                repos = git.get_repositories([i for i in projects if (i.name == repoName[0])][0].id)
-                repo_id = [i.id for i in repos][0]
+                repos = git.get_repositories([i for i in projects if (i.name == project[0])][0].id)
+                repo_id = [i.id for i in repos if (i.name == repoName[0])][0]
 
                 path = url.split("path=/")
                 item = git.get_item_content(repository_id = repo_id,path=urllib.parse.unquote(path[1]))
-                text = [x for x in item][0]
+                text = ""
+                for x in item:
+                    text = text + x.decode('utf-8')
                 if url.lower().endswith(".sql"):
                     self.query = text
                     self.db_type = (
