@@ -581,6 +581,7 @@ class Runner:
 
                     git = connection.clients.get_git_client()
 
+                    url = self.task.processing_devops
 
                     #get the org, project and repository from the url
                     orgName = re.findall(r"\.(?:com)\/(.+?)\/", url)
@@ -590,8 +591,8 @@ class Runner:
                     projects = [i for i in get_projects_response if (i.name == project[0])]
 
                     #this for repository id.
-                    repos = git.get_repositories([i for i in projects if (i.name == repoName[0])][0].id)
-                    repo_id = [i.id for i in repos][0]
+                    repos = git.get_repositories([i for i in projects if (i.name == project[0])][0].id)
+                    repo_id = [i.id for i in repos if (i.name == repoName[0])][0]
 
                     path = url.split("path=/")
                     item = git.get_items(repository_id = repo_id, scope_path =  urllib.parse.unquote(path[1]))
@@ -604,7 +605,7 @@ class Runner:
 
                                     obj = git.get_blob_content(repository_id = repo_id,sha1=ob.object_id,download=True)
 
-                                    with open(str(self.temp_path) +"\\"+ ob.relative_path,'wb') as f:
+                                    with open(os.path.join(str(self.temp_path) ,ob.relative_path),'wb') as f:
                                             for code in obj:
                                                  f.write(code)
                     

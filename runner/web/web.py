@@ -299,7 +299,7 @@ def task_get_processing_git_code(task_id: int) -> dict:
             # we should be using the sourcecode class to insert vars
             return jsonify({"code": task.processing_code})
         elif task.processing_type_id == 7:
-            return jsonify({"code": source.devops(task.processing_devops)})
+            return jsonify({"code": source.devops(task.processing_devops + "//"+task.processing_command)})
         return jsonify({})
     # pylint: disable=broad-except
     except BaseException as e:
