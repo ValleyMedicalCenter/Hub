@@ -302,8 +302,8 @@ def task_get_processing_git_code(task_id: int) -> dict:
         elif task.processing_type_id == 7:
             #if there is a branch we need rearrange the url.
             branch = re.findall(r"(&version[=]GB.+?)$",task.processing_devops)
-            url = re.sub((branch[0] if len(branch) >0 else ''),'',task.processing_devops)
-            return jsonify({"code": source.devops(url + "/"+task.processing_command) + (branch[0] if len(branch) >0 else '')})
+            url = re.sub((branch[0] if len(branch) >0 else ''),'',task.processing_devops) + "/"+task.processing_command + (branch[0] if len(branch) >0 else '')
+            return jsonify({"code": source.devops(url)})
         return jsonify({})
     # pylint: disable=broad-except
     except BaseException as e:
