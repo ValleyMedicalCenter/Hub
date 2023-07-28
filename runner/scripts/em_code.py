@@ -20,6 +20,10 @@ from azure.devops.connection import Connection
 
 urllib3.disable_warnings()  # type: ignore
 
+class AttributeDict(dict):
+    __getattr__ = dict.__getitem__
+    __setattr__ = dict.__setitem__
+    __delattr__ = dict.__delitem__
 
 class SourceCode:
     """Group of functions used to get various type of source code for task runner."""
@@ -64,6 +68,9 @@ class SourceCode:
                 orgName = re.findall(r"\.(?:com)\/(.+?)\/", url)
                 project = re.findall(rf"\.(?:com\/{orgName[0]})\/(.+?)\/", url)
                 repoName = re.findall(rf"\.(?:com\/{orgName[0]}\/{project[0]}\/_git)\/(.+?)\?", url)
+                path = re.findall(r"(path[=])\/(.+?)(&|$)",url)
+                branch = re.findall(r"(version[=]GB)(.+?)$",url)
+                version = AttributeDict({'version':('main' if len(branch) == 0 else branch[0][1]), 'version_type':0,'version_options':0})  
                 #need this to get the projects id
                 projects = [i for i in get_projects_response if (i.name == project[0])]
 
@@ -71,12 +78,12 @@ class SourceCode:
                 repos = git.get_repositories([i for i in projects if (i.name == project[0])][0].id)
                 repo_id = [i.id for i in repos if (i.name == repoName[0])][0]
 
-                path = url.split("path=/")
-                item = git.get_item_content(repository_id = repo_id,path=urllib.parse.unquote(path[1]))
+                
+                item = git.get_item_content(repository_id = repo_id,path=urllib.parse.unquote(path[0][1]), version_descriptor = version)
                 text = ""
                 for x in item:
                     text = text + x.decode('utf-8')
-                if url.lower().endswith(".sql"):
+                if path[0][1].endswith(".sql"):
                     self.query = text
                     self.db_type = (
                         "mssql"

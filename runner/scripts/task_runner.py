@@ -66,7 +66,11 @@ while True:
     except OverflowError:
         MAX_INT = int(MAX_INT / 10)
 
-
+#this to I can use dot notation.
+class AttributeDict(dict):
+    __getattr__ = dict.__getitem__
+    __setattr__ = dict.__setitem__
+    __delattr__ = dict.__delitem__
 class Runner:
     """Group of functions used to run a task."""
 
@@ -589,13 +593,17 @@ class Runner:
                     repoName = re.findall(rf"\.(?:com\/{orgName[0]}\/{project[0]}\/_git)\/(.+?)\?", url)
                     #need this to get the projects id
                     projects = [i for i in get_projects_response if (i.name == project[0])]
+                    path = re.findall(r"(path[=])\/(.+?)(&|$)",url)
+
+                    #if branch is specified, we need to get that, else pass in main branch.
+                    branch = re.findall(r"(version[=]GB)(.+?)$",url)
+                    version = AttributeDict({'version':('main' if len(branch) == 0 else branch[0][1]), 'version_type':0,'version_options':0})  
 
                     #this for repository id.
                     repos = git.get_repositories([i for i in projects if (i.name == project[0])][0].id)
                     repo_id = [i.id for i in repos if (i.name == repoName[0])][0]
 
-                    path = url.split("path=/")
-                    item = git.get_items(repository_id = repo_id, scope_path =  urllib.parse.unquote(path[1]))
+                    item = git.get_items(repository_id = repo_id, scope_path =  urllib.parse.unquote(path[0][1]), version_descriptor = version)
                     for i in item:
 
                             if i.is_folder is not None:
