@@ -84,7 +84,7 @@ class SourceCode:
                 for x in item:
                     text = text + x.decode('utf-8')
                 if path[0][1].endswith(".sql"):
-                    self.query = text
+                    self.query = text.encode('utf-8')
                     self.db_type = (
                         "mssql"
                         if self.task.source_database_conn
