@@ -32,9 +32,11 @@ while True:
 def connect(connection: str) -> Tuple[Any, Any]:
     """Connect to jdbc server."""
     try:
+        conn_split = dict(x.split('=') for x in connection.split(","))
         conn = jaydebeapi.connect(
-            connection
+            **conn_split
         )
+        print(conn)
         cur = conn.cursor()
         return conn, cur
 
