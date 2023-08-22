@@ -34,9 +34,9 @@ def connect(connection: str) -> Tuple[Any, Any]:
     try:
         conn_split = dict(x.split('=') for x in connection.split(","))
         conn = jaydebeapi.connect(
-            **conn_split
+            ##couldn't get **conn_split to work. Call out parameters works.
+            jclassname=conn_split['jclassname'],url=conn_split['url'],jars=conn_split['jars'],libs=conn_split['libs']
         )
-        print(conn)
         cur = conn.cursor()
         return conn, cur
 
