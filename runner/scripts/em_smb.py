@@ -314,13 +314,15 @@ class Smb:
 
             path_builder = ""
             for my_path in my_dir:
-                path_builder += my_path + "/"
+                #only create directory if backup dir
+                if self.connection is None:
+                    path_builder += my_path + "/"
 
-                try:
-                    self.conn.listPath(self.share_name, path_builder)
-                # pylint: disable=broad-except
-                except OperationFailure:
-                    self.conn.createDirectory(self.share_name, path_builder)
+                    try:
+                        self.conn.listPath(self.share_name, path_builder)
+                    # pylint: disable=broad-except
+                    except OperationFailure:
+                        self.conn.createDirectory(self.share_name, path_builder)
 
             # pylint: disable=useless-else-on-loop
             else:
