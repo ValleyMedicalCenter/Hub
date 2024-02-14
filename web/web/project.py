@@ -3,7 +3,7 @@
 import datetime
 from typing import Optional, Union
 
-from cron_descriptor import FormatException, ParseException, get_description
+from cron_descriptor import FormatException, get_description
 from crypto import em_encrypt
 from flask import Blueprint
 from flask import current_app as app
@@ -241,8 +241,6 @@ def edit_project(project_id: int) -> Response:
             get_description(cron_format)
         except FormatException as e:
             return jsonify({"error": "Scheduler:\n" + str(e)})
-        except ParseException as e:
-            return jsonify({"error": "Scheduler:\n" + str(e)})
         else:
             # pylint: disable=R1735
             me.update(
@@ -402,8 +400,6 @@ def new_project() -> Response:
                     return jsonify({"error in cron_week format"})
             get_description(cron_format)
         except FormatException as e:
-            return jsonify({"error": "Scheduler:\n" + str(e)})
-        except ParseException as e:
             return jsonify({"error": "Scheduler:\n" + str(e)})
         else:
             # create project
