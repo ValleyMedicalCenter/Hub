@@ -73,13 +73,13 @@
                     Run
                     <!-- month, year -->
                     <span class="em-pSection">
-                        {% if p.cron_month != None or p.cron_year != None %}<em>every</em>{% endif %}
-                        {% if p.cron_month != None %}<em>{{ p.cron_month|cron_month }},</em>{% endif %}
-                        {% if p.cron_year != None %}<em>{{ p.cron_year }}</em>{% endif %}
+                        {% if ( p.cron_month != None and p.cron_month ) or ( p.cron_year != None and p.cron_year ) %}<em>every</em>{% endif %}
+                        {% if p.cron_month != None and p.cron_month %}<em>{{ p.cron_month|cron_month }},</em>{% endif %}
+                        {% if p.cron_year != None and p.cron_year %}<em>{{ p.cron_year }}</em>{% endif %}
                     </span>
                     <!-- week of year -->
                     <span class="em-pSection">
-                        {% if p.cron_week != None %}
+                        {% if p.cron_week != None and p.cron_week %}
                             on the
                             <em>{{ p.cron_week|num_st }}</em>
                             week of the year,
@@ -87,7 +87,7 @@
                     </span>
                     <!-- day of week -->
                     <span class="em-pSection">
-                        {% if p.cron_week_day != None %}
+                        {% if p.cron_week_day != None and p.cron_week_day %}
                             on
                             <em>{{ p.cron_week_day|cron_week_day }}</em>
                             ,
@@ -95,7 +95,7 @@
                     </span>
                     <!-- day of month -->
                     <span class="em-pSection">
-                        {% if p.cron_day != None %}
+                        {% if p.cron_day != None and p.cron_day %}
                             on the
                             <em>{{ p.cron_day|num_st }}</em>
                             day of the month,
