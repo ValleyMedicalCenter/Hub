@@ -107,7 +107,7 @@ class CronValidator:
                 parts = expr.split("/")
                 self.check_range("interval", expr=parts[1], mi=mi, mx=mx, prefix=prefix)
 
-            elif re.match(r",", expr):
+            elif "," in expr:
                 limit = 60
                 expr_ls = expr.split(",")
                 if len(expr_ls) > limit:
@@ -117,7 +117,7 @@ class CronValidator:
                     raise ValueError(msg)
                 else:
                     for n in expr_ls:
-                        self.second_minute(expr=n, prefix=prefix)
+                        self.second_minute(expr=n.strip(), prefix=prefix)
             else:
                 msg = "({0}) Illegal Expression Format '{1}'".format(prefix, expr)
                 raise ValueError(msg)
@@ -170,7 +170,7 @@ class CronValidator:
                 parts = expr.split("/")
                 self.check_range("interval", expr=parts[1], mi=mi, mx=mx, prefix=prefix)
 
-            elif re.match(r",", expr):
+            elif "," in expr:
                 limit = 24
                 expr_ls = expr.split(",")
                 if len(expr_ls) > limit:
@@ -180,7 +180,7 @@ class CronValidator:
                     raise ValueError(msg)
                 else:
                     for n in expr_ls:
-                        self.hour(expr=n, prefix=prefix)
+                        self.hour(expr=n.strip(), prefix=prefix)
             else:
                 msg = "({0}) Illegal Expression Format '{1}'".format(prefix, expr)
                 raise ValueError(msg)
@@ -239,7 +239,7 @@ class CronValidator:
                 parts = expr.split("/")
                 self.check_range("interval", expr=parts[1], mi=0, mx=mx, prefix=prefix)
 
-            elif re.match(r",", expr):
+            elif "," in expr:
                 limit = 31
                 expr_ls = expr.split(",")
                 if len(expr_ls) > 31:
@@ -249,7 +249,7 @@ class CronValidator:
                     raise ValueError(msg)
                 else:
                     for dayofmonth in expr_ls:
-                        self.dayofmonth(expr=dayofmonth, prefix=prefix)
+                        self.dayofmonth(expr=dayofmonth.strip(), prefix=prefix)
             elif re.match(r"^(L|l)-(\d{1,2})$", expr):
                 parts = expr.split("-")
                 self.check_range(expr=parts[1], mi=mi, mx=mx, prefix=prefix)
@@ -356,7 +356,7 @@ class CronValidator:
                 parts = expr.split("/")
                 self.check_range("interval", expr=parts[1], mi=0, mx=12, prefix=prefix)
 
-            elif re.match(r",", expr):
+            elif "," in expr:
                 """
                 get values with a comma and then run each part through months again.
                 """
@@ -369,7 +369,7 @@ class CronValidator:
                     raise ValueError(msg)
                 else:
                     for mon in expr_ls:
-                        self.month(expr=mon, prefix=prefix)
+                        self.month(expr=mon.strip(), prefix=prefix)
             else:
                 msg = "({0}) Illegal Expression Format '{1}'".format(prefix, expr)
                 raise ValueError(msg)
@@ -417,7 +417,7 @@ class CronValidator:
         elif re.match(r"[*]/\d{1}$", expr):
             parts = expr.split("/")
             self.check_range("interval", expr=parts[1], mi=0, mx=mx, prefix=prefix)
-        elif re.match(r",", expr):
+        elif "," in expr:
             parts = expr.split(",")
             if len(parts) > 53:
                 msg = "({0}) Exceeded maximum number({1}) of specified value. '{2}' is provided".format(
@@ -426,7 +426,7 @@ class CronValidator:
                 raise ValueError(msg)
             else:
                 for w in parts:
-                    self.week(expr=w, prefix=prefix)
+                    self.week(expr=w.strip(), prefix=prefix)
 
     def dayofweek(self, expr: str, prefix: str):
         """DAYOfWeek expressions (n : Number, s: String)
@@ -498,7 +498,7 @@ class CronValidator:
                 st=st_day, ed=ed_day, mi=mi, mx=mx, prefix=prefix, type="dow"
             )
 
-        elif re.match(r",", expr):
+        elif "," in expr:
             limit = 7
             expr_ls = expr.split(",")
             if len(expr_ls) > limit:
@@ -508,7 +508,7 @@ class CronValidator:
                 raise ValueError(msg)
             else:
                 for day in expr_ls:
-                    self.dayofweek(expr=day, prefix=prefix)
+                    self.dayofweek(expr=day.strip(), prefix=prefix)
 
         else:
             msg = "({0}) Illegal Expression Format '{1}'".format(prefix, expr)
@@ -563,7 +563,7 @@ class CronValidator:
                 self.check_range(expr=parts[0], mi=0, mx=129, prefix=prefix)
                 self.check_range("interval", expr=parts[1], mi=0, mx=129, prefix=prefix)
 
-            elif re.match(r",", expr):
+            elif "," in expr:
                 limit = 84
                 expr_ls = expr.split(",")
                 if len(expr_ls) > limit:
@@ -573,7 +573,7 @@ class CronValidator:
                     raise ValueError(msg)
                 else:
                     for year in expr_ls:
-                        self.year(expr=year, prefix=prefix)
+                        self.year(expr=year.strip(), prefix=prefix)
             else:
                 msg = "({0}) Illegal Expression Format '{1}'".format(prefix, expr)
                 raise ValueError(msg)

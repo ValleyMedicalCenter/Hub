@@ -2,6 +2,7 @@
 
 {% block crumbs %}
     <ul>
+        {% if error %} <p class=error><strong>Error: </strong> {{ error }} </p>{% endif %}
         <li>
             <a href="{{ url_for("project_bp.all_projects") }}">All Projects</a>
         </li>

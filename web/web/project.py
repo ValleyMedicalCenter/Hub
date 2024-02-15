@@ -1,14 +1,13 @@
 """Project web views."""
 
 import datetime
-import sys
-from pathlib import Path
 from typing import Optional, Union
 
+from cron_validator import CronValidator
 from crypto import em_encrypt
 from flask import Blueprint
 from flask import current_app as app
-from flask import flash, jsonify, redirect, render_template, request, url_for
+from flask import flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 from sqlalchemy import text
 from sqlalchemy.sql import functions as func
@@ -20,9 +19,6 @@ from web.web import submit_executor
 
 from . import get_or_create
 from .executors import disable_project
-
-sys.path.append(str(Path(__file__).parents[2]) + "/scripts")
-import cron_validator
 
 project_bp = Blueprint("project_bp", __name__)
 
@@ -134,7 +130,7 @@ def edit_project_form(project_id: int) -> Union[str, Response]:
 def edit_project(project_id: int) -> Response:
     """Save project edits."""
     cache.clear()
-
+    error = None
     project = get_or_create(db.session, Project, id=project_id)
 
     # get filter query for update
@@ -150,19 +146,24 @@ def edit_project(project_id: int) -> Response:
     cron_hour = form.get("project_cron_hour", None, type=str)
     cron_min = form.get("project_cron_min", None, type=str)
     cron_sec = form.get("project_cron_sec", None, type=str)
+    try:
+        CronValidator(
+            cron=cron,
+            cron_year=cron_year,
+            cron_month=cron_month,
+            cron_week=cron_week,
+            cron_day=cron_day,
+            cron_week_day=cron_week_day,
+            cron_hour=cron_hour,
+            cron_min=cron_min,
+            cron_sec=cron_sec,
+        ).validate()
 
-    cron_validator(
-        cron=cron,
-        cron_year=cron_year,
-        cron_month=cron_month,
-        cron_week=cron_week,
-        cron_day=cron_day,
-        cron_week_day=cron_week_day,
-        cron_hour=cron_hour,
-        cron_min=cron_min,
-        cron_sec=cron_sec,
-    ).validate()
-
+    except ValueError as e:
+        error = str(e)
+        return redirect(
+            url_for("project_bp.edit_project", project=project_id), error=error
+        )
     # pylint: disable=R1735
     me.update(
         dict(  # noqa: C408
@@ -249,6 +250,7 @@ def new_project_form() -> str:
 def new_project() -> Response:
     """Save a new project."""
     cache.clear()
+    error = None
     form = request.form
     cron = form.get("project_cron", 0, type=int)
     cron_year = form.get("project_cron_year", None, type=str)
@@ -260,17 +262,22 @@ def new_project() -> Response:
     cron_min = form.get("project_cron_min", None, type=str)
     cron_sec = form.get("project_cron_sec", None, type=str)
 
-    cron_validator(
-        cron=cron,
-        cron_year=cron_year,
-        cron_month=cron_month,
-        cron_week=cron_week,
-        cron_day=cron_day,
-        cron_week_day=cron_week_day,
-        cron_hour=cron_hour,
-        cron_min=cron_min,
-        cron_sec=cron_sec,
-    ).validate()
+    try:
+        CronValidator(
+            cron=cron,
+            cron_year=cron_year,
+            cron_month=cron_month,
+            cron_week=cron_week,
+            cron_day=cron_day,
+            cron_week_day=cron_week_day,
+            cron_hour=cron_hour,
+            cron_min=cron_min,
+            cron_sec=cron_sec,
+        ).validate()
+
+    except ValueError as e:
+        error = str(e)
+        return redirect(url_for("project_bp.new_project_form"), error=error)
 
     # create project
     me = Project(
