@@ -1,9 +1,10 @@
 """Project web views."""
 
 import datetime
+import sys
+from pathlib import Path
 from typing import Optional, Union
 
-from cron_descriptor import FormatException, get_description
 from crypto import em_encrypt
 from flask import Blueprint
 from flask import current_app as app
@@ -20,6 +21,9 @@ from web.web import submit_executor
 from . import get_or_create
 from .executors import disable_project
 
+sys.path.append(str(Path(__file__).parents[2]) + "/scripts")
+import cron_validator
+
 project_bp = Blueprint("project_bp", __name__)
 
 
@@ -28,84 +32,6 @@ def form_to_date(date_string: Optional[str]) -> Optional[datetime.datetime]:
     if date_string:
         return datetime.datetime.strptime(date_string, "%Y-%m-%d %H:%M")
     return None
-
-
-def _convert_day_to_abbrev(full_day):
-    # Mapping of full day names to 3-letter abbreviations
-    full_to_abbrev = {
-        "monday": "mon",
-        "tuesday": "tue",
-        "wednesday": "wed",
-        "thursday": "thu",
-        "friday": "fri",
-        "saturday": "sat",
-        "sunday": "sun",
-    }
-    return full_to_abbrev.get(full_day.lower(), None)
-
-
-def _xth_y_to_cron(xth_y):
-    # Mapping of day abbreviations to cron day of the week number
-    days_of_week = {
-        "monday": 1,
-        "tuesday": 2,
-        "wednesday": 3,
-        "thursday": 4,
-        "friday": 5,
-        "saturday": 6,
-        "sunday": 0,
-    }
-
-    # Split the input into occurrence and day of the week
-    xth, y = xth_y.lower().split()
-
-    # Map the day abbreviation to the cron day of the week number
-    day_of_week = days_of_week[y]
-
-    # Adjust the occurrence value to fit the cron format
-    if xth == "last":
-        occurrence = -1
-    else:
-        occurrence = int(xth[:-2]) - 1
-
-    # Construct the cron expression
-    cron_expression = f"{day_of_week}#{occurrence}"
-
-    return cron_expression
-
-
-def _validate_cron_value(value):
-    # Check if the value is in the format '*/a'
-    if value.startswith("*/"):
-        try:
-            step = int(value[2:])
-            return 1 <= step <= 53
-        except ValueError:
-            return False
-
-    # Check if the value is in the format 'a-b' or 'a-b/c'
-    if "-" in value:
-        parts = value.split("/")
-        range_parts = parts[0].split("-")
-        if len(range_parts) == 2:
-            try:
-                start = int(range_parts[0])
-                end = int(range_parts[1])
-                if start < 1 or end > 53:
-                    return False
-                if len(parts) == 2:
-                    step = int(parts[1])
-                    return 1 <= step <= 53
-                return True
-            except ValueError:
-                return False
-
-    # Check if the value is in the format 'a'
-    try:
-        a = int(value)
-        return 1 <= a <= 53
-    except ValueError:
-        return False
 
 
 @project_bp.route("/project")
@@ -216,115 +142,64 @@ def edit_project(project_id: int) -> Response:
 
     form = request.form
     cron = form.get("project_cron", 0, type=int)
-    cron_year = (form.get("project_cron_year", None, type=str),)
-    cron_month = (form.get("project_cron_mnth", None, type=str),)
-    cron_week = (form.get("project_cron_week", None, type=str),)
-    cron_day = (form.get("project_cron_day", None, type=str),)
-    cron_week_day = (form.get("project_cron_wday", None, type=str),)
-    cron_hour = (form.get("project_cron_hour", None, type=str),)
-    cron_min = (form.get("project_cron_min", None, type=str),)
+    cron_year = form.get("project_cron_year", None, type=str)
+    cron_month = form.get("project_cron_mnth", None, type=str)
+    cron_week = form.get("project_cron_week", None, type=str)
+    cron_day = form.get("project_cron_day", None, type=str)
+    cron_week_day = form.get("project_cron_wday", None, type=str)
+    cron_hour = form.get("project_cron_hour", None, type=str)
+    cron_min = form.get("project_cron_min", None, type=str)
     cron_sec = form.get("project_cron_sec", None, type=str)
 
-    if cron:
-        if cron_day.split() == 2:
-            x, y = cron_day.lower().split()
-            if len(y) > 3:
-                y = _convert_day_to_abbrev(y)
-            cronDay = _xth_y_to_cron(x + " " + y)
-        cronDay = cronDay if cronDay else cron_day
-        cron_format = f"{cron_sec if cron_sec else 0} {cron_min if cron_min else 0} {cron_hour if cron_hour else 0} {cron_week_day if cron_week_day else '*'} {cron_month if cron_month else 0} {cronDay if cronDay else ''} {cron_year if cron_year else ''}"
-        try:
-            if cron_week:
-                # check if the week range is correct
-                if not _validate_cron_value(cron_week):
-                    return jsonify({"error in cron_week format"})
-            get_description(cron_format)
-        except FormatException as e:
-            return jsonify({"error": "Scheduler:\n" + str(e)})
-        else:
-            # pylint: disable=R1735
-            me.update(
-                dict(  # noqa: C408
-                    name=form.get("project_name", "undefined", type=str).strip(),
-                    description=form.get("project_desc", "", type=str),
-                    owner_id=(
-                        current_user.id
-                        if form.get("project_ownership", 0, type=int) == 1
-                        else me.first().owner_id
-                    ),
-                    updater_id=current_user.id,
-                    sequence_tasks=form.get("run_tasks_in_sequence", 0, type=int),
-                    cron=cron,
-                    cron_year=cron_year,
-                    cron_month=cron_month,
-                    cron_week=cron_week,
-                    cron_day=cron_day,
-                    cron_week_day=cron_week_day,
-                    cron_hour=cron_hour,
-                    cron_min=cron_min,
-                    cron_sec=cron_sec,
-                    cron_start_date=form_to_date(
-                        form.get("project_cron_sdate", None, type=str)
-                    ),
-                    cron_end_date=form_to_date(
-                        form.get("project_cron_edate", None, type=str)
-                    ),
-                    intv=form.get("project_intv", 0, type=int),
-                    intv_value=form.get("project_intv_value", None, type=int),
-                    intv_type=form.get("project_intv_intv", None, type=str),
-                    intv_start_date=form_to_date(
-                        form.get("project_intv_sdate", None, type=str)
-                    ),
-                    intv_end_date=form_to_date(
-                        form.get("project_intv_edate", None, type=str)
-                    ),
-                    ooff=form.get("project_ooff", 0, type=int),
-                    ooff_date=form_to_date(
-                        form.get("project_ooff_date", None, type=str)
-                    ),
-                )
-            )
-    else:
-        # pylint: disable=R1735
-        me.update(
-            dict(  # noqa: C408
-                name=form.get("project_name", "undefined", type=str).strip(),
-                description=form.get("project_desc", "", type=str),
-                owner_id=(
-                    current_user.id
-                    if form.get("project_ownership", 0, type=int) == 1
-                    else me.first().owner_id
-                ),
-                updater_id=current_user.id,
-                sequence_tasks=form.get("run_tasks_in_sequence", 0, type=int),
-                cron=cron,
-                cron_year=cron_year,
-                cron_month=cron_month,
-                cron_week=cron_week,
-                cron_day=cron_day,
-                cron_week_day=cron_week_day,
-                cron_hour=cron_hour,
-                cron_min=cron_min,
-                cron_sec=cron_sec,
-                cron_start_date=form_to_date(
-                    form.get("project_cron_sdate", None, type=str)
-                ),
-                cron_end_date=form_to_date(
-                    form.get("project_cron_edate", None, type=str)
-                ),
-                intv=form.get("project_intv", 0, type=int),
-                intv_value=form.get("project_intv_value", None, type=int),
-                intv_type=form.get("project_intv_intv", None, type=str),
-                intv_start_date=form_to_date(
-                    form.get("project_intv_sdate", None, type=str)
-                ),
-                intv_end_date=form_to_date(
-                    form.get("project_intv_edate", None, type=str)
-                ),
-                ooff=form.get("project_ooff", 0, type=int),
-                ooff_date=form_to_date(form.get("project_ooff_date", None, type=str)),
-            )
+    cron_validator(
+        cron=cron,
+        cron_year=cron_year,
+        cron_month=cron_month,
+        cron_week=cron_week,
+        cron_day=cron_day,
+        cron_week_day=cron_week_day,
+        cron_hour=cron_hour,
+        cron_min=cron_min,
+        cron_sec=cron_sec,
+    ).validate()
+
+    # pylint: disable=R1735
+    me.update(
+        dict(  # noqa: C408
+            name=form.get("project_name", "undefined", type=str).strip(),
+            description=form.get("project_desc", "", type=str),
+            owner_id=(
+                current_user.id
+                if form.get("project_ownership", 0, type=int) == 1
+                else me.first().owner_id
+            ),
+            updater_id=current_user.id,
+            sequence_tasks=form.get("run_tasks_in_sequence", 0, type=int),
+            cron=cron,
+            cron_year=cron_year,
+            cron_month=cron_month,
+            cron_week=cron_week,
+            cron_day=cron_day,
+            cron_week_day=cron_week_day,
+            cron_hour=cron_hour,
+            cron_min=cron_min,
+            cron_sec=cron_sec,
+            cron_start_date=form_to_date(
+                form.get("project_cron_sdate", None, type=str)
+            ),
+            cron_end_date=form_to_date(form.get("project_cron_edate", None, type=str)),
+            intv=form.get("project_intv", 0, type=int),
+            intv_value=form.get("project_intv_value", None, type=int),
+            intv_type=form.get("project_intv_intv", None, type=str),
+            intv_start_date=form_to_date(
+                form.get("project_intv_sdate", None, type=str)
+            ),
+            intv_end_date=form_to_date(form.get("project_intv_edate", None, type=str)),
+            ooff=form.get("project_ooff", 0, type=int),
+            ooff_date=form_to_date(form.get("project_ooff_date", None, type=str)),
         )
+    )
+
     db.session.commit()
 
     # update params 1. remove old params
@@ -376,99 +251,54 @@ def new_project() -> Response:
     cache.clear()
     form = request.form
     cron = form.get("project_cron", 0, type=int)
-    cron_year = (form.get("project_cron_year", None, type=str),)
-    cron_month = (form.get("project_cron_mnth", None, type=str),)
-    cron_week = (form.get("project_cron_week", None, type=str),)
-    cron_day = (form.get("project_cron_day", None, type=str),)
-    cron_week_day = (form.get("project_cron_wday", None, type=str),)
-    cron_hour = (form.get("project_cron_hour", None, type=str),)
-    cron_min = (form.get("project_cron_min", None, type=str),)
+    cron_year = form.get("project_cron_year", None, type=str)
+    cron_month = form.get("project_cron_mnth", None, type=str)
+    cron_week = form.get("project_cron_week", None, type=str)
+    cron_day = form.get("project_cron_day", None, type=str)
+    cron_week_day = form.get("project_cron_wday", None, type=str)
+    cron_hour = form.get("project_cron_hour", None, type=str)
+    cron_min = form.get("project_cron_min", None, type=str)
     cron_sec = form.get("project_cron_sec", None, type=str)
 
-    if cron:
-        if cron_day.split() == 2:
-            x, y = cron_day.lower().split()
-            if len(y) > 3:
-                y = _convert_day_to_abbrev(y)
-            cronDay = _xth_y_to_cron(x + " " + y)
-        cronDay = cronDay if cronDay else cron_day
-        cron_format = f"{cron_sec if cron_sec else 0} {cron_min if cron_min else 0} {cron_hour if cron_hour else 0} {cron_week_day if cron_week_day else '*'} {cron_month if cron_month else 0} {cronDay if cronDay else ''} {cron_year if cron_year else ''}"
-        try:
-            if cron_week:
-                # check if the week range is correct
-                if not _validate_cron_value(cron_week):
-                    return jsonify({"error in cron_week format"})
-            get_description(cron_format)
-        except FormatException as e:
-            return jsonify({"error": "Scheduler:\n" + str(e)})
-        else:
-            # create project
-            me = Project(
-                name=form.get("project_name", "undefined", type=str).strip(),
-                description=form.get("project_desc", "", type=str),
-                owner_id=current_user.id,
-                creator_id=current_user.id,
-                updater_id=current_user.id,
-                sequence_tasks=form.get("run_tasks_in_sequence", 0, type=int),
-                cron=cron,
-                cron_year=cron_year,
-                cron_month=cron_month,
-                cron_week=cron_week,
-                cron_day=cron_day,
-                cron_week_day=cron_week_day,
-                cron_hour=cron_hour,
-                cron_min=cron_min,
-                cron_sec=cron_sec,
-                cron_start_date=form_to_date(
-                    form.get("project_cron_sdate", None, type=str)
-                ),
-                cron_end_date=form_to_date(
-                    form.get("project_cron_edate", None, type=str)
-                ),
-                intv=form.get("project_intv", 0, type=int),
-                intv_value=form.get("project_intv_value", None, type=int),
-                intv_type=form.get("project_intv_intv", None, type=str),
-                intv_start_date=form_to_date(
-                    form.get("project_intv_sdate", None, type=str)
-                ),
-                intv_end_date=form_to_date(
-                    form.get("project_intv_edate", None, type=str)
-                ),
-                ooff=form.get("project_ooff", 0, type=int),
-                ooff_date=form_to_date(form.get("project_ooff_date", None, type=str)),
-            )
-    else:
-        # create project
-        me = Project(
-            name=form.get("project_name", "undefined", type=str).strip(),
-            description=form.get("project_desc", "", type=str),
-            owner_id=current_user.id,
-            creator_id=current_user.id,
-            updater_id=current_user.id,
-            sequence_tasks=form.get("run_tasks_in_sequence", 0, type=int),
-            cron=cron,
-            cron_year=cron_year,
-            cron_month=cron_month,
-            cron_week=cron_week,
-            cron_day=cron_day,
-            cron_week_day=cron_week_day,
-            cron_hour=cron_hour,
-            cron_min=cron_min,
-            cron_sec=cron_sec,
-            cron_start_date=form_to_date(
-                form.get("project_cron_sdate", None, type=str)
-            ),
-            cron_end_date=form_to_date(form.get("project_cron_edate", None, type=str)),
-            intv=form.get("project_intv", 0, type=int),
-            intv_value=form.get("project_intv_value", None, type=int),
-            intv_type=form.get("project_intv_intv", None, type=str),
-            intv_start_date=form_to_date(
-                form.get("project_intv_sdate", None, type=str)
-            ),
-            intv_end_date=form_to_date(form.get("project_intv_edate", None, type=str)),
-            ooff=form.get("project_ooff", 0, type=int),
-            ooff_date=form_to_date(form.get("project_ooff_date", None, type=str)),
-        )
+    cron_validator(
+        cron=cron,
+        cron_year=cron_year,
+        cron_month=cron_month,
+        cron_week=cron_week,
+        cron_day=cron_day,
+        cron_week_day=cron_week_day,
+        cron_hour=cron_hour,
+        cron_min=cron_min,
+        cron_sec=cron_sec,
+    ).validate()
+
+    # create project
+    me = Project(
+        name=form.get("project_name", "undefined", type=str).strip(),
+        description=form.get("project_desc", "", type=str),
+        owner_id=current_user.id,
+        creator_id=current_user.id,
+        updater_id=current_user.id,
+        sequence_tasks=form.get("run_tasks_in_sequence", 0, type=int),
+        cron=cron,
+        cron_year=cron_year,
+        cron_month=cron_month,
+        cron_week=cron_week,
+        cron_day=cron_day,
+        cron_week_day=cron_week_day,
+        cron_hour=cron_hour,
+        cron_min=cron_min,
+        cron_sec=cron_sec,
+        cron_start_date=form_to_date(form.get("project_cron_sdate", None, type=str)),
+        cron_end_date=form_to_date(form.get("project_cron_edate", None, type=str)),
+        intv=form.get("project_intv", 0, type=int),
+        intv_value=form.get("project_intv_value", None, type=int),
+        intv_type=form.get("project_intv_intv", None, type=str),
+        intv_start_date=form_to_date(form.get("project_intv_sdate", None, type=str)),
+        intv_end_date=form_to_date(form.get("project_intv_edate", None, type=str)),
+        ooff=form.get("project_ooff", 0, type=int),
+        ooff_date=form_to_date(form.get("project_ooff_date", None, type=str)),
+    )
 
     db.session.add(me)
     db.session.commit()
