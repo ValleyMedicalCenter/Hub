@@ -135,7 +135,7 @@ def edit_project(project_id: int) -> Response:
 
     # get filter query for update
     me = Project.query.filter_by(id=project.id)
-
+    me2 = Project.query.filter_by(id=project_id).first()
     form = request.form
     cron = form.get("project_cron", 0, type=int)
     cron_year = form.get("project_cron_year", None, type=str)
@@ -161,8 +161,8 @@ def edit_project(project_id: int) -> Response:
 
     except ValueError as e:
         error = str(e)
-        return redirect(
-            url_for("project_bp.edit_project", project=project_id), error=error
+        return render_template(
+            "pages/project/new.html.j2", p=me, title="Editing " + me.name, error=error
         )
     # pylint: disable=R1735
     me.update(
@@ -277,7 +277,12 @@ def new_project() -> Response:
 
     except ValueError as e:
         error = str(e)
-        return redirect(url_for("project_bp.new_project_form"), error=error)
+        return render_template(
+            "pages/project/new.html.j2",
+            p=Project.query.filter_by(id=0).first(),
+            title="New Project",
+            error=error,
+        )
 
     # create project
     me = Project(
