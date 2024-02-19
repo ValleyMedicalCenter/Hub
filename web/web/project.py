@@ -162,7 +162,7 @@ def edit_project(project_id: int) -> Response:
     except ValueError as e:
         error = str(e)
         return render_template(
-            "pages/project/new.html.j2", p=me, title="Editing " + me.name, error=error
+            "pages/project/new.html.j2", p=me2, title="Editing " + me2.name, error=error
         )
     # pylint: disable=R1735
     me.update(
