@@ -3,6 +3,7 @@
 import datetime
 from typing import Optional, Union
 
+from cron_descriptor import ExpressionDescriptor
 from cron_validator import CronValidator
 from crypto import em_encrypt
 from flask import Blueprint
@@ -97,6 +98,16 @@ def one_project(project_id: int) -> Union[str, Response]:
             .order_by(Task.order.asc(), Task.name.asc())  # type: ignore[attr-defined, union-attr]
             .first()
         )
+        desc = ExpressionDescriptor(
+            cron_year=me.cron_year,
+            cron_month=me.cron_month,
+            cron_week=me.cron_week,
+            cron_day=me.cron_day,
+            cron_week_day=me.cron_week_day,
+            cron_hour=me.cron_hour,
+            cron_min=me.cron_min,
+            cron_sec=me.cron_sec,
+        ).get_description()
 
         return render_template(
             "pages/project/one.html.j2",
@@ -104,6 +115,7 @@ def one_project(project_id: int) -> Union[str, Response]:
             has_secrets=any(p.sensitive == 1 for p in me.params),
             title=me.name,
             task=first_task,
+            cron_desc=desc,
         )
 
     flash("The project does not exist.")

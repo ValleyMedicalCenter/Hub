@@ -111,19 +111,17 @@ class CronValidator:
                 limit = 60
                 expr_ls = expr.split(",")
                 if len(expr_ls) > limit:
-                    msg = "({0}) Exceeded maximum number({1}) of specified value. '{2}' is provided".format(
-                        prefix, limit, len(expr_ls)
-                    )
+                    msg = f"({prefix}) Exceeded maximum number({limit}) of specified value. '{len(expr_ls)}' is provided"
                     raise ValueError(msg)
                 else:
                     for n in expr_ls:
                         self.second_minute(expr=n.strip(), prefix=prefix)
             else:
-                msg = "({0}) Illegal Expression Format '{1}'".format(prefix, expr)
+                msg = f"({prefix}) Illegal Expression Format '{expr}'"
                 raise ValueError(msg)
 
         else:
-            msg = "({0}) Illegal Expression Format '{1}'".format(prefix, expr)
+            msg = f"({prefix}) Illegal Expression Format '{expr}'"
 
     def hour(self, expr: str, prefix: str):
         """hour expressions (n : Number, s: String)
@@ -174,18 +172,16 @@ class CronValidator:
                 limit = 24
                 expr_ls = expr.split(",")
                 if len(expr_ls) > limit:
-                    msg = "({0}) Exceeded maximum number({1}) of specified value. '{2}' is provided".format(
-                        prefix, 24, len(limit)
-                    )
+                    msg = f"({prefix}) Exceeded maximum number({24}) of specified value. '{len(limit)}' is provided"
                     raise ValueError(msg)
                 else:
                     for n in expr_ls:
                         self.hour(expr=n.strip(), prefix=prefix)
             else:
-                msg = "({0}) Illegal Expression Format '{1}'".format(prefix, expr)
+                msg = f"({prefix}) Illegal Expression Format '{expr}'"
                 raise ValueError(msg)
         else:
-            msg = "({0}) Illegal Expression Format '{1}'".format(prefix, expr)
+            msg = f"({prefix}) Illegal Expression Format '{expr}'"
             raise ValueError(msg)
 
     def dayofmonth(self, expr: str, prefix: str):
@@ -243,9 +239,7 @@ class CronValidator:
                 limit = 31
                 expr_ls = expr.split(",")
                 if len(expr_ls) > 31:
-                    msg = "({0}) Exceeded maximum number({1}) of specified value. '{2}' is provided".format(
-                        prefix, limit, len(expr_ls)
-                    )
+                    msg = f"({prefix}) Exceeded maximum number({limit}) of specified value. '{len(expr_ls)}' is provided"
                     raise ValueError(msg)
                 else:
                     for dayofmonth in expr_ls:
@@ -254,7 +248,7 @@ class CronValidator:
                 parts = expr.split("-")
                 self.check_range(expr=parts[1], mi=mi, mx=mx, prefix=prefix)
             else:
-                msg = "Illegal Expression Format '{0}'".format(expr)
+                msg = f"Illegal Expression Format '{expr}'"
                 raise ValueError(msg)
 
         elif "last" == expr.lower():
@@ -266,7 +260,7 @@ class CronValidator:
             try:
                 st_day = cron_days[parts[1].upper()]
             except KeyError:
-                msg = "({0}) Invalid value '{1}'".format(prefix, expr)
+                msg = f"({prefix}) Invalid value '{expr}'"
                 raise ValueError(msg)
             self.check_range(expr=parts[0], mi=mi, mx=5, prefix=prefix, type="day")
         elif re.match(r"last\s\D{3}$", expr, re.IGNORECASE):
@@ -275,16 +269,10 @@ class CronValidator:
             try:
                 st_day = cron_days[parts[1].upper()]
             except KeyError:
-                msg = "({0}) Invalid value '{1}'".format(prefix, expr)
+                msg = f"({prefix}) Invalid value '{expr}'"
                 raise ValueError(msg)
-        elif re.match(r"^(\d{1,2})(w{1}|W{1})$", expr):
-            self.check_range(expr=expr[:-1], mi=mi, mx=mx, prefix=prefix)
-
-        elif re.match(r"^(w{1}|W{1})(\d{1,2})$", expr):
-            self.check_range(expr=expr[1:], mi=mi, mx=mx, prefix=prefix)
-
         else:
-            msg = "({0}) Illegal Expression Format '{1}'".format(prefix, expr)
+            msg = f"({prefix}) Illegal Expression Format '{expr}'"
             raise ValueError(msg)
 
     def month(self, expr: str, prefix: str):
@@ -304,9 +292,9 @@ class CronValidator:
             self.check_range(expr=expr, mi=mi, mx=mx, prefix=prefix)
 
         elif re.match(r"\D{3}$", expr):
-            matched_month = [m for m in self._cron_months.values() if expr == m]
+            matched_month = [m for m in self._cron_months.values() if expr.upper() == m]
             if len(matched_month) == 0:
-                msg = "Invalid Month value '{}'".format(expr)
+                msg = f"Invalid Month value '{expr}'"
                 raise ValueError(msg)
 
         elif re.search(r"[-*,/]", expr):
@@ -324,10 +312,10 @@ class CronValidator:
             elif re.match(r"\D{3}-\D{3}$", expr):
                 parts = expr.split("-")
                 cron_months = {v: k for (k, v) in self._cron_months.items()}
-                st_not_exist = parts[0] not in cron_months
-                ed_not_exist = parts[1] not in cron_months
+                st_not_exist = parts[0].upper() not in cron_months
+                ed_not_exist = parts[1].upper() not in cron_months
                 if st_not_exist or ed_not_exist:
-                    msg = "Invalid Month value '{}'".format(expr)
+                    msg = f"Invalid Month value '{expr}'"
                     raise ValueError(msg)
                 self.compare_range(
                     st=cron_months[parts[0]],
@@ -363,18 +351,16 @@ class CronValidator:
                 limit = 12
                 expr_ls = expr.split(",")
                 if len(expr_ls) > limit:
-                    msg = "({0}) Exceeded maximum number({1}) of specified value. '{2}' is provided".format(
-                        prefix, limit, len(expr_ls)
-                    )
+                    msg = f"({prefix}) Exceeded maximum number({limit}) of specified value. '{len(expr_ls)}' is provided"
                     raise ValueError(msg)
                 else:
                     for mon in expr_ls:
                         self.month(expr=mon.strip(), prefix=prefix)
             else:
-                msg = "({0}) Illegal Expression Format '{1}'".format(prefix, expr)
+                msg = f"({prefix}) Illegal Expression Format '{expr}'"
                 raise ValueError(msg)
         else:
-            msg = "({0}) Illegal Expression Format '{1}'".format(prefix, expr)
+            msg = f"({prefix}) Illegal Expression Format '{expr}'"
             raise ValueError(msg)
 
     def week(self, expr: str, prefix: str):
@@ -420,9 +406,7 @@ class CronValidator:
         elif "," in expr:
             parts = expr.split(",")
             if len(parts) > 53:
-                msg = "({0}) Exceeded maximum number({1}) of specified value. '{2}' is provided".format(
-                    prefix, mx, len(parts)
-                )
+                msg = f"({prefix}) Exceeded maximum number({mx}) of specified value. '{len(parts)}' is provided"
                 raise ValueError(msg)
             else:
                 for w in parts:
@@ -457,7 +441,7 @@ class CronValidator:
             if expr.upper() in cron_days:
                 pass
             else:
-                msg = "Invalid value '{}'".format(expr)
+                msg = f"Invalid value '{expr}'"
                 raise ValueError(msg)
 
         elif re.match(r"\d{1}/\d{1}$", expr):
@@ -492,7 +476,7 @@ class CronValidator:
                 st_day = cron_days[parts[0].upper()]
                 ed_day = cron_days[parts[1].upper()]
             except KeyError:
-                msg = "({0}) Invalid value '{1}'".format(prefix, expr)
+                msg = f"({prefix}) Invalid value '{expr}'"
                 raise ValueError(msg)
             self.compare_range(
                 st=st_day, ed=ed_day, mi=mi, mx=mx, prefix=prefix, type="dow"
@@ -502,16 +486,14 @@ class CronValidator:
             limit = 7
             expr_ls = expr.split(",")
             if len(expr_ls) > limit:
-                msg = "({0}) Exceeded maximum number({1}) of specified value. '{2}' is provided".format(
-                    prefix, limit, len(expr_ls)
-                )
+                msg = f"({prefix}) Exceeded maximum number({limit}) of specified value. '{len(expr_ls)}' is provided"
                 raise ValueError(msg)
             else:
                 for day in expr_ls:
                     self.dayofweek(expr=day.strip(), prefix=prefix)
 
         else:
-            msg = "({0}) Illegal Expression Format '{1}'".format(prefix, expr)
+            msg = f"({prefix}) Illegal Expression Format '{expr}'"
             raise ValueError(msg)
 
     def year(self, expr: str, prefix: str):
@@ -567,18 +549,16 @@ class CronValidator:
                 limit = 84
                 expr_ls = expr.split(",")
                 if len(expr_ls) > limit:
-                    msg = "({0}) Exceeded maximum number({1}) of specified value. '{2}' is provided".format(
-                        prefix, limit, len(expr_ls)
-                    )
+                    msg = f"({prefix}) Exceeded maximum number({limit}) of specified value. '{len(expr_ls)}' is provided"
                     raise ValueError(msg)
                 else:
                     for year in expr_ls:
                         self.year(expr=year.strip(), prefix=prefix)
             else:
-                msg = "({0}) Illegal Expression Format '{1}'".format(prefix, expr)
+                msg = f"({prefix}) Illegal Expression Format '{expr}'"
                 raise ValueError(msg)
         else:
-            msg = "({0}) Illegal Expression Format '{1}'".format(prefix, expr)
+            msg = f"({prefix}) Illegal Expression Format '{expr}'"
             raise ValueError(msg)
 
     def check_range(self, type=None, **kwargs):
@@ -591,19 +571,11 @@ class CronValidator:
         expr = kwargs["expr"]
         if int(expr) < mi or mx < int(expr):
             if type is None:
-                msg = "{0} values must be between {1} and {2} but '{3}' is provided".format(
-                    prefix, mi, mx, expr
-                )
+                msg = f"{prefix} values must be between {mi} and {mx} but '{expr}' is provided"
             elif type == "interval":
-                msg = "({0}) Accepted increment value range is {1}~{2} but '{3}' is provided".format(
-                    prefix, mi, mx, expr
-                )
+                msg = f"({prefix}) Accepted increment value range is {mi}~{mx} but '{expr}' is provided"
             elif type == "dow":
-                msg = (
-                    "({0}) Accepted week value is {1}~{2} but '{3}' is provided".format(
-                        prefix, mi, mx, expr
-                    )
-                )
+                msg = f"({prefix}) Accepted week value is {mi}~{mx} but '{expr}' is provided"
             raise ValueError(msg)
         else:
             pass
@@ -619,11 +591,9 @@ class CronValidator:
         mx = kwargs["mx"]
         if int(st) > int(ed):
             if type is None:
-                msg = "({0}) Invalid range '{1}-{2}'. Accepted range is {3}-{4}".format(
-                    prefix, st, ed, mi, mx
+                msg = (
+                    f"({prefix}) Invalid range '{st}-{ed}'. Accepted range is {mi}-{mx}"
                 )
             elif type == "dow":
-                msg = "({0}) Invalid range '{1}-{2}'. Accepted range is {3}-{4}".format(
-                    prefix, self._cron_days[st], self._cron_days[ed], mi, mx
-                )
+                msg = f"({prefix}) Invalid range '{self._cron_days[st]}-{self._cron_days[ed]}'. Accepted range is {mi}-{mx}"
             raise ValueError(msg)
