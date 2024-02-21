@@ -141,7 +141,7 @@ class ExpressionDescriptor:
         seconds_expression = self.cron_sec
         minute_expression = self.cron_min
         hour_expression = self.cron_hour
-        description = []
+        description = ""
 
         # handle special cases first
         if (
@@ -421,7 +421,9 @@ class ExpressionDescriptor:
                 lambda s: s,
                 lambda s: ", every day" if s == "1" else ", every {0} days",
                 lambda s: ", between day {0} and {1} of the month",
-                lambda s: " on the {0} day of the month",
+                lambda s: " on the {0} day of the month"
+                if s.isdigit()
+                else " on the {0} of the month",
                 lambda s: ", {0} through {1}",
             )
 
