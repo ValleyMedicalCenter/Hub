@@ -124,7 +124,9 @@ class CronValidator:
                 raise ValueError(msg)
             else:
                 for n in expr_ls:
-                    self._number_validate(expr=n.strip(), prefix=prefix)
+                    self._number_validate(
+                        expr=n.strip(), prefix=prefix, mi=mi, mx=mx, limit=limit
+                    )
         else:
             msg = f"({prefix}) Illegal Expression Format '{expr}'"
             raise ValueError(msg)
