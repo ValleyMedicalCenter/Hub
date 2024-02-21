@@ -124,7 +124,7 @@ class CronValidator:
                 raise ValueError(msg)
             else:
                 for n in expr_ls:
-                    self.second_minute(expr=n.strip(), prefix=prefix)
+                    self._number_validate(expr=n.strip(), prefix=prefix)
         else:
             msg = f"({prefix}) Illegal Expression Format '{expr}'"
             raise ValueError(msg)
@@ -183,7 +183,7 @@ class CronValidator:
                 raise ValueError(msg)
             else:
                 for dayofmonth in expr_ls:
-                    self.dayofmonth(expr=dayofmonth.strip(), prefix=prefix)
+                    self._day_of_month(expr=dayofmonth.strip(), prefix=prefix)
 
         elif "last" == expr.lower():
             pass
@@ -288,7 +288,7 @@ class CronValidator:
                 raise ValueError(msg)
             else:
                 for mon in expr_ls:
-                    self.month(expr=mon.strip(), prefix=prefix)
+                    self._month(expr=mon.strip(), prefix=prefix)
         else:
             msg = f"({prefix}) Illegal Expression Format '{expr}'"
             raise ValueError(msg)
@@ -369,7 +369,7 @@ class CronValidator:
                 raise ValueError(msg)
             else:
                 for day in expr_ls:
-                    self.dayofweek(expr=day.strip(), prefix=prefix)
+                    self._day_of_week(expr=day.strip(), prefix=prefix)
 
         else:
             msg = f"({prefix}) Illegal Expression Format '{expr}'"
