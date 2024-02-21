@@ -109,7 +109,9 @@ class CronValidator:
         elif re.match(r"\d{1,2}/\d{1,2}$", expr):
             parts = expr.split("/")
             self.check_range(expr=parts[0], mi=mi, mx=mx, prefix=prefix)
-            self.check_range("interval", expr=parts[1], mi=mi, mx=mx, prefix=prefix)
+            self.check_range(
+                type="interval", expr=parts[1], mi=mi, mx=mx, prefix=prefix
+            )
 
         elif re.match(r"\d{1,2}-\d{1,2}/\d{1,2}$", expr):
             parts = expr.split("/")
@@ -119,11 +121,15 @@ class CronValidator:
             self.compare_range(
                 st=fst_parts[0], ed=fst_parts[1], mi=mi, mx=mx, prefix=prefix
             )
-            self.check_range("interval", expr=parts[1], mi=mi, mx=mx, prefix=prefix)
+            self.check_range(
+                type="interval", expr=parts[1], mi=mi, mx=mx, prefix=prefix
+            )
 
         elif re.match(r"\*/\d{1,2}$", expr):
             parts = expr.split("/")
-            self.check_range("interval", expr=parts[1], mi=mi, mx=mx, prefix=prefix)
+            self.check_range(
+                type="interval", expr=parts[1], mi=mi, mx=mx, prefix=prefix
+            )
 
         elif "," in expr:
             limit = 60
@@ -165,7 +171,9 @@ class CronValidator:
         elif re.match(r"\d{1,2}/\d{1,2}$", expr):
             parts = expr.split("/")
             self.check_range(expr=parts[0], mi=mi, mx=mx, prefix=prefix)
-            self.check_range("interval", expr=parts[1], mi=mi, mx=mx, prefix=prefix)
+            self.check_range(
+                type="interval", expr=parts[1], mi=mi, mx=mx, prefix=prefix
+            )
 
         elif re.match(r"\d{1,2}-\d{1,2}/\d{1,2}$", expr):
             parts = expr.split("/")
@@ -175,11 +183,15 @@ class CronValidator:
             self.compare_range(
                 st=fst_parts[0], ed=fst_parts[1], mi=mi, mx=mx, prefix=prefix
             )
-            self.check_range("interval", expr=parts[1], mi=mi, mx=mx, prefix=prefix)
+            self.check_range(
+                type="interval", expr=parts[1], mi=mi, mx=mx, prefix=prefix
+            )
 
         elif re.match(r"\*/\d{1,2}$", expr):
             parts = expr.split("/")
-            self.check_range("interval", expr=parts[1], mi=mi, mx=mx, prefix=prefix)
+            self.check_range(
+                type="interval", expr=parts[1], mi=mi, mx=mx, prefix=prefix
+            )
 
         elif "," in expr:
             limit = 24
@@ -222,7 +234,7 @@ class CronValidator:
         elif re.match(r"\d{1,2}/\d{1,2}$", expr):
             parts = expr.split("/")
             self.check_range(expr=parts[0], mi=mi, mx=mx, prefix=prefix)
-            self.check_range("interval", expr=parts[1], mi=0, mx=mx, prefix=prefix)
+            self.check_range(type="interval", expr=parts[1], mi=0, mx=mx, prefix=prefix)
 
         elif re.match(r"\d{1,2}-\d{1,2}/\d{1,2}$", expr):
             parts = expr.split("/")
@@ -232,11 +244,11 @@ class CronValidator:
             self.compare_range(
                 st=fst_parts[0], ed=fst_parts[1], mi=mi, mx=mx, prefix=prefix
             )
-            self.check_range("interval", expr=parts[1], mi=0, mx=mx, prefix=prefix)
+            self.check_range(type="interval", expr=parts[1], mi=0, mx=mx, prefix=prefix)
 
         elif re.match(r"\*/\d{1,2}$", expr):
             parts = expr.split("/")
-            self.check_range("interval", expr=parts[1], mi=0, mx=mx, prefix=prefix)
+            self.check_range(type="interval", expr=parts[1], mi=0, mx=mx, prefix=prefix)
 
         elif "," in expr:
             limit = 31
@@ -322,7 +334,7 @@ class CronValidator:
         elif re.match(r"\d{1,2}/\d{1,2}$", expr):
             parts = expr.split("/")
             self.check_range(expr=parts[0], mi=mi, mx=mx, prefix=prefix)
-            self.check_range("interval", expr=parts[1], mi=0, mx=mx, prefix=prefix)
+            self.check_range(type="interval", expr=parts[1], mi=0, mx=mx, prefix=prefix)
 
         elif re.match(r"\d{1,2}-\d{1,2}/\d{1,2}$", expr):
             parts = expr.split("/")
@@ -332,11 +344,11 @@ class CronValidator:
             self.compare_range(
                 st=fst_parts[0], ed=fst_parts[1], mi=mi, mx=mx, prefix=prefix
             )
-            self.check_range("interval", expr=parts[1], mi=0, mx=12, prefix=prefix)
+            self.check_range(type="interval", expr=parts[1], mi=0, mx=12, prefix=prefix)
 
         elif re.match(r"\*/\d{1,2}$", expr):
             parts = expr.split("/")
-            self.check_range("interval", expr=parts[1], mi=0, mx=12, prefix=prefix)
+            self.check_range(type="interval", expr=parts[1], mi=0, mx=12, prefix=prefix)
 
         elif "," in expr:
             """
@@ -375,7 +387,7 @@ class CronValidator:
         elif re.match(r"\d{1}/\d{1}$", expr):
             parts = expr.split("/")
             self.check_range(expr=parts[0], mi=mi, mx=mx, prefix=prefix)
-            self.check_range("interval", expr=parts[1], mi=0, mx=mx, prefix=prefix)
+            self.check_range(type="interval", expr=parts[1], mi=0, mx=mx, prefix=prefix)
 
         elif re.match(r"\d{1}-\d{1}/\d{1}$", expr):
             parts = expr.split("/")
@@ -385,11 +397,11 @@ class CronValidator:
             self.compare_range(
                 st=fst_parts[0], ed=fst_parts[1], mi=mi, mx=mx, prefix=prefix
             )
-            self.check_range("interval", expr=parts[1], mi=0, mx=mx, prefix=prefix)
+            self.check_range(type="interval", expr=parts[1], mi=0, mx=mx, prefix=prefix)
 
         elif re.match(r"[*]/\d{1}$", expr):
             parts = expr.split("/")
-            self.check_range("interval", expr=parts[1], mi=0, mx=mx, prefix=prefix)
+            self.check_range(type="interval", expr=parts[1], mi=0, mx=mx, prefix=prefix)
 
         elif "," in expr:
             parts = expr.split(",")
@@ -435,7 +447,7 @@ class CronValidator:
         elif re.match(r"\d{1}/\d{1}$", expr):
             parts = expr.split("/")
             self.check_range(expr=parts[0], mi=mi, mx=mx, prefix=prefix)
-            self.check_range("interval", expr=parts[1], mi=0, mx=mx, prefix=prefix)
+            self.check_range(type="interval", expr=parts[1], mi=0, mx=mx, prefix=prefix)
 
         elif re.match(r"\d{1}-\d{1}/\d{1}$", expr):
             parts = expr.split("/")
@@ -445,11 +457,11 @@ class CronValidator:
             self.compare_range(
                 st=fst_parts[0], ed=fst_parts[1], mi=mi, mx=mx, prefix=prefix
             )
-            self.check_range("interval", expr=parts[1], mi=0, mx=mx, prefix=prefix)
+            self.check_range(type="interval", expr=parts[1], mi=0, mx=mx, prefix=prefix)
 
         elif re.match(r"[*]/\d{1}$", expr):
             parts = expr.split("/")
-            self.check_range("interval", expr=parts[1], mi=0, mx=mx, prefix=prefix)
+            self.check_range(type="interval", expr=parts[1], mi=0, mx=mx, prefix=prefix)
 
         elif re.match(r"\d{1}-\d{1}$", expr):
             parts = expr.split("-")
@@ -509,7 +521,9 @@ class CronValidator:
         elif re.match(r"\d{4}/\d{1,3}$", expr):
             parts = expr.split("/")
             self.check_range(expr=parts[0], mi=mi, mx=mx, prefix=prefix)
-            self.check_range("interval", expr=parts[1], mi=0, mx=129, prefix=prefix)
+            self.check_range(
+                type="interval", expr=parts[1], mi=0, mx=129, prefix=prefix
+            )
 
         elif re.match(r"\d{4}-\d{4}/\d{1,3}$", expr):
             parts = expr.split("/")
@@ -519,16 +533,22 @@ class CronValidator:
             self.compare_range(
                 st=fst_parts[0], ed=fst_parts[1], mi=mi, mx=mx, prefix=prefix
             )
-            self.check_range("interval", expr=parts[1], mi=0, mx=129, prefix=prefix)
+            self.check_range(
+                type="interval", expr=parts[1], mi=0, mx=129, prefix=prefix
+            )
 
         elif re.match(r"\*/\d{1,3}$", expr):
             parts = expr.split("/")
-            self.check_range("interval", expr=parts[1], mi=0, mx=129, prefix=prefix)
+            self.check_range(
+                type="interval", expr=parts[1], mi=0, mx=129, prefix=prefix
+            )
 
         elif re.match(r"\d{1}/\d{1,3}$", expr):
             parts = expr.split("/")
             self.check_range(expr=parts[0], mi=0, mx=129, prefix=prefix)
-            self.check_range("interval", expr=parts[1], mi=0, mx=129, prefix=prefix)
+            self.check_range(
+                type="interval", expr=parts[1], mi=0, mx=129, prefix=prefix
+            )
 
         elif "," in expr:
             limit = 84
