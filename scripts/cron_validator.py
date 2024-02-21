@@ -195,7 +195,7 @@ class CronValidator:
                 limit = 24
                 expr_ls = expr.split(",")
                 if len(expr_ls) > limit:
-                    msg = f"({prefix}) Exceeded maximum number({24}) of specified value. '{len(limit)}' is provided"
+                    msg = f"({prefix}) Exceeded maximum number(24) of specified value. '{len(limit)}' is provided"
                     raise ValueError(msg)
                 else:
                     for n in expr_ls:
