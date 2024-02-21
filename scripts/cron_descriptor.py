@@ -59,19 +59,19 @@ class ExpressionDescriptor:
         self.cron_min = cron_min
         self.cron_sec = cron_sec
 
-        if self.cron_sec is None:
+        if self.cron_sec is None or self.cron_sec == "":
             self.cron_sec = "0"
-        if self.cron_min is None:
+        if self.cron_min is None or self.cron_min == "":
             self.cron_min = "0"
-        if self.cron_hour is None:
+        if self.cron_hour is None or self.cron_hour == "":
             self.cron_hour = "0"
-        if self.cron_month is None:
+        if self.cron_month is None or self.cron_month == "":
             self.cron_month = "*"
-        if self.cron_year is None:
+        if self.cron_year is None or self.cron_year == "":
             self.cron_year = "*"
-        if self.cron_day is None:
+        if self.cron_day is None or self.cron_day == "":
             self.cron_day = "*"
-        if self.cron_week_day is None:
+        if self.cron_week_day is None or self.cron_week_day == "":
             self.cron_week_day = "*"
 
     def get_description(self, description_type=1):
