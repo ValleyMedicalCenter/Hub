@@ -98,16 +98,19 @@ def one_project(project_id: int) -> Union[str, Response]:
             .order_by(Task.order.asc(), Task.name.asc())  # type: ignore[attr-defined, union-attr]
             .first()
         )
-        desc = ExpressionDescriptor(
-            cron_year=me.cron_year,
-            cron_month=me.cron_month,
-            cron_week=me.cron_week,
-            cron_day=me.cron_day,
-            cron_week_day=me.cron_week_day,
-            cron_hour=me.cron_hour,
-            cron_min=me.cron_min,
-            cron_sec=me.cron_sec,
-        ).get_description()
+        try:
+            desc = ExpressionDescriptor(
+                cron_year=me.cron_year,
+                cron_month=me.cron_month,
+                cron_week=me.cron_week,
+                cron_day=me.cron_day,
+                cron_week_day=me.cron_week_day,
+                cron_hour=me.cron_hour,
+                cron_min=me.cron_min,
+                cron_sec=me.cron_sec,
+            ).get_description()
+        except ValueError as e:
+            desc = e
 
         return render_template(
             "pages/project/one.html.j2",
