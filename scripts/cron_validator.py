@@ -95,45 +95,53 @@ class CronValidator:
         nn,nn,nn (Maximum 24 elements)
         """
         mi, mx = (0, 59)
-        if "*" == expr:
-            pass
-        elif re.match(r"\d{1,2}$", expr):
+        if re.match(r"\d{1,2}$", expr):
             self.check_range(expr=expr, mi=mi, mx=mx, prefix=prefix)
 
-        elif re.match(r"\d{1,2}-\d{1,2}$", expr):
-            parts = expr.split("-")
-            self.check_range(expr=parts[0], mi=mi, mx=mx, prefix=prefix)
-            self.check_range(expr=parts[1], mi=mi, mx=mx, prefix=prefix)
-            self.compare_range(st=parts[0], ed=parts[1], mi=mi, mx=mx, prefix=prefix)
+        elif re.search(r"[-*,/]", expr):
+            if "*" == expr:
+                pass
 
-        elif re.match(r"\d{1,2}/\d{1,2}$", expr):
-            parts = expr.split("/")
-            self.check_range(expr=parts[0], mi=mi, mx=mx, prefix=prefix)
-            self.check_range("interval", expr=parts[1], mi=mi, mx=mx, prefix=prefix)
+            elif re.match(r"\d{1,2}-\d{1,2}$", expr):
+                parts = expr.split("-")
+                self.check_range(expr=parts[0], mi=mi, mx=mx, prefix=prefix)
+                self.check_range(expr=parts[1], mi=mi, mx=mx, prefix=prefix)
+                self.compare_range(
+                    st=parts[0], ed=parts[1], mi=mi, mx=mx, prefix=prefix
+                )
 
-        elif re.match(r"\d{1,2}-\d{1,2}/\d{1,2}$", expr):
-            parts = expr.split("/")
-            fst_parts = parts[0].split("-")
-            self.check_range(expr=fst_parts[0], mi=mi, mx=mx, prefix=prefix)
-            self.check_range(expr=fst_parts[1], mi=mi, mx=mx, prefix=prefix)
-            self.compare_range(
-                st=fst_parts[0], ed=fst_parts[1], mi=mi, mx=mx, prefix=prefix
-            )
-            self.check_range("interval", expr=parts[1], mi=mi, mx=mx, prefix=prefix)
+            elif re.match(r"\d{1,2}/\d{1,2}$", expr):
+                parts = expr.split("/")
+                self.check_range(expr=parts[0], mi=mi, mx=mx, prefix=prefix)
+                self.check_range("interval", expr=parts[1], mi=mi, mx=mx, prefix=prefix)
 
-        elif re.match(r"\*/\d{1,2}$", expr):
-            parts = expr.split("/")
-            self.check_range("interval", expr=parts[1], mi=mi, mx=mx, prefix=prefix)
+            elif re.match(r"\d{1,2}-\d{1,2}/\d{1,2}$", expr):
+                parts = expr.split("/")
+                fst_parts = parts[0].split("-")
+                self.check_range(expr=fst_parts[0], mi=mi, mx=mx, prefix=prefix)
+                self.check_range(expr=fst_parts[1], mi=mi, mx=mx, prefix=prefix)
+                self.compare_range(
+                    st=fst_parts[0], ed=fst_parts[1], mi=mi, mx=mx, prefix=prefix
+                )
+                self.check_range("interval", expr=parts[1], mi=mi, mx=mx, prefix=prefix)
 
-        elif "," in expr:
-            limit = 60
-            expr_ls = expr.split(",")
-            if len(expr_ls) > limit:
-                msg = f"({prefix}) Exceeded maximum number({limit}) of specified value. '{len(expr_ls)}' is provided"
-                raise ValueError(msg)
+            elif re.match(r"\*/\d{1,2}$", expr):
+                parts = expr.split("/")
+                self.check_range("interval", expr=parts[1], mi=mi, mx=mx, prefix=prefix)
+
+            elif "," in expr:
+                limit = 60
+                expr_ls = expr.split(",")
+                if len(expr_ls) > limit:
+                    msg = f"({prefix}) Exceeded maximum number({limit}) of specified value. '{len(expr_ls)}' is provided"
+                    raise ValueError(msg)
+                else:
+                    for n in expr_ls:
+                        self.second_minute(expr=n.strip(), prefix=prefix)
             else:
-                for n in expr_ls:
-                    self.second_minute(expr=n.strip(), prefix=prefix)
+                msg = f"({prefix}) Illegal Expression Format '{expr}'"
+                raise ValueError(msg)
+
         else:
             msg = f"({prefix}) Illegal Expression Format '{expr}'"
             raise ValueError(msg)
@@ -149,44 +157,52 @@ class CronValidator:
         nn,nn,nn (Maximum 24 elements)
         """
         mi, mx = (0, 23)
-        if "*" == expr:
-            pass
         if re.match(r"\d{1,2}$", expr):
             self.check_range(expr=expr, mi=mi, mx=mx, prefix=prefix)
-        elif re.match(r"\d{1,2}-\d{1,2}$", expr):
-            parts = expr.split("-")
-            self.check_range(expr=parts[0], mi=mi, mx=mx, prefix=prefix)
-            self.check_range(expr=parts[1], mi=mi, mx=mx, prefix=prefix)
-            self.compare_range(st=parts[0], ed=parts[1], mi=mi, mx=mx, prefix=prefix)
 
-        elif re.match(r"\d{1,2}/\d{1,2}$", expr):
-            parts = expr.split("/")
-            self.check_range(expr=parts[0], mi=mi, mx=mx, prefix=prefix)
-            self.check_range("interval", expr=parts[1], mi=mi, mx=mx, prefix=prefix)
+        elif re.search(r"[-*,/]", expr):
+            if "*" == expr:
+                pass
 
-        elif re.match(r"\d{1,2}-\d{1,2}/\d{1,2}$", expr):
-            parts = expr.split("/")
-            fst_parts = parts[0].split("-")
-            self.check_range(expr=fst_parts[0], mi=mi, mx=mx, prefix=prefix)
-            self.check_range(expr=fst_parts[1], mi=mi, mx=mx, prefix=prefix)
-            self.compare_range(
-                st=fst_parts[0], ed=fst_parts[1], mi=mi, mx=mx, prefix=prefix
-            )
-            self.check_range("interval", expr=parts[1], mi=mi, mx=mx, prefix=prefix)
+            elif re.match(r"\d{1,2}-\d{1,2}$", expr):
+                parts = expr.split("-")
+                self.check_range(expr=parts[0], mi=mi, mx=mx, prefix=prefix)
+                self.check_range(expr=parts[1], mi=mi, mx=mx, prefix=prefix)
+                self.compare_range(
+                    st=parts[0], ed=parts[1], mi=mi, mx=mx, prefix=prefix
+                )
 
-        elif re.match(r"\*/\d{1,2}$", expr):
-            parts = expr.split("/")
-            self.check_range("interval", expr=parts[1], mi=mi, mx=mx, prefix=prefix)
+            elif re.match(r"\d{1,2}/\d{1,2}$", expr):
+                parts = expr.split("/")
+                self.check_range(expr=parts[0], mi=mi, mx=mx, prefix=prefix)
+                self.check_range("interval", expr=parts[1], mi=mi, mx=mx, prefix=prefix)
 
-        elif "," in expr:
-            limit = 24
-            expr_ls = expr.split(",")
-            if len(expr_ls) > limit:
-                msg = f"({prefix}) Exceeded maximum number(24) of specified value. '{len(limit)}' is provided"
-                raise ValueError(msg)
+            elif re.match(r"\d{1,2}-\d{1,2}/\d{1,2}$", expr):
+                parts = expr.split("/")
+                fst_parts = parts[0].split("-")
+                self.check_range(expr=fst_parts[0], mi=mi, mx=mx, prefix=prefix)
+                self.check_range(expr=fst_parts[1], mi=mi, mx=mx, prefix=prefix)
+                self.compare_range(
+                    st=fst_parts[0], ed=fst_parts[1], mi=mi, mx=mx, prefix=prefix
+                )
+                self.check_range("interval", expr=parts[1], mi=mi, mx=mx, prefix=prefix)
+
+            elif re.match(r"\*/\d{1,2}$", expr):
+                parts = expr.split("/")
+                self.check_range("interval", expr=parts[1], mi=mi, mx=mx, prefix=prefix)
+
+            elif "," in expr:
+                limit = 24
+                expr_ls = expr.split(",")
+                if len(expr_ls) > limit:
+                    msg = f"({prefix}) Exceeded maximum number(24) of specified value. '{len(limit)}' is provided"
+                    raise ValueError(msg)
+                else:
+                    for n in expr_ls:
+                        self.hour(expr=n.strip(), prefix=prefix)
             else:
-                for n in expr_ls:
-                    self.hour(expr=n.strip(), prefix=prefix)
+                msg = f"({prefix}) Illegal Expression Format '{expr}'"
+                raise ValueError(msg)
         else:
             msg = f"({prefix}) Illegal Expression Format '{expr}'"
             raise ValueError(msg)
@@ -206,48 +222,58 @@ class CronValidator:
         last sss
         """
         mi, mx = (1, 31)
-        if "*" == expr:
-            pass
-        elif re.match(r"\d{1,2}$", expr):
+        if re.match(r"\d{1,2}$", expr):
             self.check_range(expr=expr, mi=mi, mx=mx, prefix=prefix)
+        elif re.search(r"[-*,/?]", expr):
+            if "*" == expr:
+                pass
 
-        elif re.match(r"\d{1,2}-\d{1,2}$", expr):
-            parts = expr.split("-")
-            self.check_range(expr=parts[0], mi=mi, mx=mx, prefix=prefix)
-            self.check_range(expr=parts[1], mi=mi, mx=mx, prefix=prefix)
-            self.compare_range(st=parts[0], ed=parts[1], mi=mi, mx=mx, prefix=prefix)
+            elif "?" == expr:
+                pass
 
-        elif re.match(r"\d{1,2}/\d{1,2}$", expr):
-            parts = expr.split("/")
-            self.check_range(expr=parts[0], mi=mi, mx=mx, prefix=prefix)
-            self.check_range("interval", expr=parts[1], mi=0, mx=mx, prefix=prefix)
+            elif re.match(r"\d{1,2}-\d{1,2}$", expr):
+                parts = expr.split("-")
+                self.check_range(expr=parts[0], mi=mi, mx=mx, prefix=prefix)
+                self.check_range(expr=parts[1], mi=mi, mx=mx, prefix=prefix)
+                self.compare_range(
+                    st=parts[0], ed=parts[1], mi=mi, mx=mx, prefix=prefix
+                )
 
-        elif re.match(r"\d{1,2}-\d{1,2}/\d{1,2}$", expr):
-            parts = expr.split("/")
-            fst_parts = parts[0].split("-")
-            self.check_range(expr=fst_parts[0], mi=mi, mx=mx, prefix=prefix)
-            self.check_range(expr=fst_parts[1], mi=mi, mx=mx, prefix=prefix)
-            self.compare_range(
-                st=fst_parts[0], ed=fst_parts[1], mi=mi, mx=mx, prefix=prefix
-            )
-            self.check_range("interval", expr=parts[1], mi=0, mx=mx, prefix=prefix)
+            elif re.match(r"\d{1,2}/\d{1,2}$", expr):
+                parts = expr.split("/")
+                self.check_range(expr=parts[0], mi=mi, mx=mx, prefix=prefix)
+                self.check_range("interval", expr=parts[1], mi=0, mx=mx, prefix=prefix)
 
-        elif re.match(r"\*/\d{1,2}$", expr):
-            parts = expr.split("/")
-            self.check_range("interval", expr=parts[1], mi=0, mx=mx, prefix=prefix)
+            elif re.match(r"\d{1,2}-\d{1,2}/\d{1,2}$", expr):
+                parts = expr.split("/")
+                fst_parts = parts[0].split("-")
+                self.check_range(expr=fst_parts[0], mi=mi, mx=mx, prefix=prefix)
+                self.check_range(expr=fst_parts[1], mi=mi, mx=mx, prefix=prefix)
+                self.compare_range(
+                    st=fst_parts[0], ed=fst_parts[1], mi=mi, mx=mx, prefix=prefix
+                )
+                self.check_range("interval", expr=parts[1], mi=0, mx=mx, prefix=prefix)
 
-        elif "," in expr:
-            limit = 31
-            expr_ls = expr.split(",")
-            if len(expr_ls) > 31:
-                msg = f"({prefix}) Exceeded maximum number({limit}) of specified value. '{len(expr_ls)}' is provided"
-                raise ValueError(msg)
+            elif re.match(r"\*/\d{1,2}$", expr):
+                parts = expr.split("/")
+                self.check_range("interval", expr=parts[1], mi=0, mx=mx, prefix=prefix)
+
+            elif "," in expr:
+                limit = 31
+                expr_ls = expr.split(",")
+                if len(expr_ls) > 31:
+                    msg = f"({prefix}) Exceeded maximum number({limit}) of specified value. '{len(expr_ls)}' is provided"
+                    raise ValueError(msg)
+                else:
+                    for dayofmonth in expr_ls:
+                        self.dayofmonth(expr=dayofmonth.strip(), prefix=prefix)
+            elif re.match(r"^(L|l)-(\d{1,2})$", expr):
+                parts = expr.split("-")
+                self.check_range(expr=parts[1], mi=mi, mx=mx, prefix=prefix)
             else:
-                for dayofmonth in expr_ls:
-                    self.dayofmonth(expr=dayofmonth.strip(), prefix=prefix)
-        elif re.match(r"^(L|l)-(\d{1,2})$", expr):
-            parts = expr.split("-")
-            self.check_range(expr=parts[1], mi=mi, mx=mx, prefix=prefix)
+                msg = f"Illegal Expression Format '{expr}'"
+                raise ValueError(msg)
+
         elif "last" == expr.lower():
             pass
         elif re.match(r"\d{1}(nd|st|rd|th)\s\D{3}$", expr, re.IGNORECASE):
@@ -285,10 +311,7 @@ class CronValidator:
         nn,nn,nn,nn-nn,sss-sss (Maximum 12 elements)
         """
         mi, mx = (1, 12)
-        if "*" == expr:
-            pass
-
-        elif re.match(r"\d{1,2}$", expr):
+        if re.match(r"\d{1,2}$", expr):
             self.check_range(expr=expr, mi=mi, mx=mx, prefix=prefix)
 
         elif re.match(r"\D{3}$", expr):
@@ -297,59 +320,68 @@ class CronValidator:
                 msg = f"Invalid Month value '{expr}'"
                 raise ValueError(msg)
 
-        elif re.match(r"\d{1,2}-\d{1,2}$", expr):
-            parts = expr.split("-")
-            self.check_range(expr=parts[0], mi=mi, mx=mx, prefix=prefix)
-            self.check_range(expr=parts[1], mi=mi, mx=mx, prefix=prefix)
-            self.compare_range(st=parts[0], ed=parts[1], mi=mi, mx=mx, prefix=prefix)
+        elif re.search(r"[-*,/]", expr):
+            if "*" == expr:
+                pass
 
-        elif re.match(r"\D{3}-\D{3}$", expr):
-            parts = expr.split("-")
-            cron_months = {v: k for (k, v) in self._cron_months.items()}
-            st_not_exist = parts[0].upper() not in cron_months
-            ed_not_exist = parts[1].upper() not in cron_months
-            if st_not_exist or ed_not_exist:
-                msg = f"Invalid Month value '{expr}'"
-                raise ValueError(msg)
-            self.compare_range(
-                st=cron_months[parts[0]],
-                ed=cron_months[parts[1]],
-                mi=mi,
-                mx=mx,
-                prefix=prefix,
-            )
+            elif re.match(r"\d{1,2}-\d{1,2}$", expr):
+                parts = expr.split("-")
+                self.check_range(expr=parts[0], mi=mi, mx=mx, prefix=prefix)
+                self.check_range(expr=parts[1], mi=mi, mx=mx, prefix=prefix)
+                self.compare_range(
+                    st=parts[0], ed=parts[1], mi=mi, mx=mx, prefix=prefix
+                )
 
-        elif re.match(r"\d{1,2}/\d{1,2}$", expr):
-            parts = expr.split("/")
-            self.check_range(expr=parts[0], mi=mi, mx=mx, prefix=prefix)
-            self.check_range("interval", expr=parts[1], mi=0, mx=mx, prefix=prefix)
+            elif re.match(r"\D{3}-\D{3}$", expr):
+                parts = expr.split("-")
+                cron_months = {v: k for (k, v) in self._cron_months.items()}
+                st_not_exist = parts[0].upper() not in cron_months
+                ed_not_exist = parts[1].upper() not in cron_months
+                if st_not_exist or ed_not_exist:
+                    msg = f"Invalid Month value '{expr}'"
+                    raise ValueError(msg)
+                self.compare_range(
+                    st=cron_months[parts[0]],
+                    ed=cron_months[parts[1]],
+                    mi=mi,
+                    mx=mx,
+                    prefix=prefix,
+                )
 
-        elif re.match(r"\d{1,2}-\d{1,2}/\d{1,2}$", expr):
-            parts = expr.split("/")
-            fst_parts = parts[0].split("-")
-            self.check_range(expr=fst_parts[0], mi=mi, mx=mx, prefix=prefix)
-            self.check_range(expr=fst_parts[1], mi=mi, mx=mx, prefix=prefix)
-            self.compare_range(
-                st=fst_parts[0], ed=fst_parts[1], mi=mi, mx=mx, prefix=prefix
-            )
-            self.check_range("interval", expr=parts[1], mi=0, mx=12, prefix=prefix)
+            elif re.match(r"\d{1,2}/\d{1,2}$", expr):
+                parts = expr.split("/")
+                self.check_range(expr=parts[0], mi=mi, mx=mx, prefix=prefix)
+                self.check_range("interval", expr=parts[1], mi=0, mx=mx, prefix=prefix)
 
-        elif re.match(r"\*/\d{1,2}$", expr):
-            parts = expr.split("/")
-            self.check_range("interval", expr=parts[1], mi=0, mx=12, prefix=prefix)
+            elif re.match(r"\d{1,2}-\d{1,2}/\d{1,2}$", expr):
+                parts = expr.split("/")
+                fst_parts = parts[0].split("-")
+                self.check_range(expr=fst_parts[0], mi=mi, mx=mx, prefix=prefix)
+                self.check_range(expr=fst_parts[1], mi=mi, mx=mx, prefix=prefix)
+                self.compare_range(
+                    st=fst_parts[0], ed=fst_parts[1], mi=mi, mx=mx, prefix=prefix
+                )
+                self.check_range("interval", expr=parts[1], mi=0, mx=12, prefix=prefix)
 
-        elif "," in expr:
-            """
-            get values with a comma and then run each part through months again.
-            """
-            limit = 12
-            expr_ls = expr.split(",")
-            if len(expr_ls) > limit:
-                msg = f"({prefix}) Exceeded maximum number({limit}) of specified value. '{len(expr_ls)}' is provided"
-                raise ValueError(msg)
+            elif re.match(r"\*/\d{1,2}$", expr):
+                parts = expr.split("/")
+                self.check_range("interval", expr=parts[1], mi=0, mx=12, prefix=prefix)
+
+            elif "," in expr:
+                """
+                get values with a comma and then run each part through months again.
+                """
+                limit = 12
+                expr_ls = expr.split(",")
+                if len(expr_ls) > limit:
+                    msg = f"({prefix}) Exceeded maximum number({limit}) of specified value. '{len(expr_ls)}' is provided"
+                    raise ValueError(msg)
+                else:
+                    for mon in expr_ls:
+                        self.month(expr=mon.strip(), prefix=prefix)
             else:
-                for mon in expr_ls:
-                    self.month(expr=mon.strip(), prefix=prefix)
+                msg = f"({prefix}) Illegal Expression Format '{expr}'"
+                raise ValueError(msg)
         else:
             msg = f"({prefix}) Illegal Expression Format '{expr}'"
             raise ValueError(msg)
@@ -368,6 +400,9 @@ class CronValidator:
         mi, mx = (1, 53)
 
         if "*" == expr:
+            pass
+
+        elif "?" == expr:
             pass
 
         elif re.match(r"\d{1,2}", expr):
@@ -416,6 +451,9 @@ class CronValidator:
         mi, mx = (0, 7)
 
         if "*" == expr:
+            pass
+
+        elif "?" == expr:
             pass
 
         elif re.match(r"\d{1}$", expr):
@@ -491,61 +529,70 @@ class CronValidator:
         nnnn,nnnn,nnnn(1970~2099) - maximum 86 elements
         """
         mi, mx = (1970, 2099)
-
-        if "*" == expr:
-            pass
-
-        elif re.match(r"\d{4}$", expr):
+        if re.match(r"\d{4}$", expr):
             self.check_range(expr=expr, mi=mi, mx=mx, prefix=prefix)
 
-        elif re.match(r"\d{4}-\d{4}$", expr):
-            parts = expr.split("-")
-            self.check_range(expr=parts[0], mi=mi, mx=mx, prefix=prefix)
-            self.check_range(expr=parts[1], mi=mi, mx=mx, prefix=prefix)
-            self.compare_range(st=parts[0], ed=parts[1], mi=mi, mx=mx, prefix=prefix)
+        elif re.search(r"[-*,/]", expr):
+            if "*" == expr:
+                pass
 
-        elif re.match(r"\d{4}/\d{1,3}$", expr):
-            parts = expr.split("/")
-            self.check_range(expr=parts[0], mi=mi, mx=mx, prefix=prefix)
-            self.check_range("interval", expr=parts[1], mi=0, mx=129, prefix=prefix)
+            elif re.match(r"\d{4}-\d{4}$", expr):
+                parts = expr.split("-")
+                self.check_range(expr=parts[0], mi=mi, mx=mx, prefix=prefix)
+                self.check_range(expr=parts[1], mi=mi, mx=mx, prefix=prefix)
+                self.compare_range(
+                    st=parts[0], ed=parts[1], mi=mi, mx=mx, prefix=prefix
+                )
 
-        elif re.match(r"\d{4}-\d{4}/\d{1,3}$", expr):
-            parts = expr.split("/")
-            fst_parts = parts[0].split("-")
-            self.check_range(expr=fst_parts[0], mi=mi, mx=mx, prefix=prefix)
-            self.check_range(expr=fst_parts[1], mi=mi, mx=mx, prefix=prefix)
-            self.compare_range(
-                st=fst_parts[0], ed=fst_parts[1], mi=mi, mx=mx, prefix=prefix
-            )
-            self.check_range("interval", expr=parts[1], mi=0, mx=129, prefix=prefix)
+            elif re.match(r"\d{4}/\d{1,3}$", expr):
+                parts = expr.split("/")
+                self.check_range(expr=parts[0], mi=mi, mx=mx, prefix=prefix)
+                self.check_range("interval", expr=parts[1], mi=0, mx=129, prefix=prefix)
 
-        elif re.match(r"\*/\d{1,3}$", expr):
-            parts = expr.split("/")
-            self.check_range("interval", expr=parts[1], mi=0, mx=129, prefix=prefix)
+            elif re.match(r"\d{4}-\d{4}/\d{1,3}$", expr):
+                parts = expr.split("/")
+                fst_parts = parts[0].split("-")
+                self.check_range(expr=fst_parts[0], mi=mi, mx=mx, prefix=prefix)
+                self.check_range(expr=fst_parts[1], mi=mi, mx=mx, prefix=prefix)
+                self.compare_range(
+                    st=fst_parts[0], ed=fst_parts[1], mi=mi, mx=mx, prefix=prefix
+                )
+                self.check_range("interval", expr=parts[1], mi=0, mx=129, prefix=prefix)
 
-        elif re.match(r"\d{1}/\d{1,3}$", expr):
-            parts = expr.split("/")
-            self.check_range(expr=parts[0], mi=0, mx=129, prefix=prefix)
-            self.check_range("interval", expr=parts[1], mi=0, mx=129, prefix=prefix)
+            elif re.match(r"\*/\d{1,3}$", expr):
+                parts = expr.split("/")
+                self.check_range("interval", expr=parts[1], mi=0, mx=129, prefix=prefix)
 
-        elif "," in expr:
-            limit = 84
-            expr_ls = expr.split(",")
-            if len(expr_ls) > limit:
-                msg = f"({prefix}) Exceeded maximum number({limit}) of specified value. '{len(expr_ls)}' is provided"
-                raise ValueError(msg)
+            elif re.match(r"\d{1}/\d{1,3}$", expr):
+                parts = expr.split("/")
+                self.check_range(expr=parts[0], mi=0, mx=129, prefix=prefix)
+                self.check_range("interval", expr=parts[1], mi=0, mx=129, prefix=prefix)
+
+            elif "," in expr:
+                limit = 84
+                expr_ls = expr.split(",")
+                if len(expr_ls) > limit:
+                    msg = f"({prefix}) Exceeded maximum number({limit}) of specified value. '{len(expr_ls)}' is provided"
+                    raise ValueError(msg)
+                else:
+                    for year in expr_ls:
+                        self.year(expr=year.strip(), prefix=prefix)
             else:
-                for year in expr_ls:
-                    self.year(expr=year.strip(), prefix=prefix)
+                msg = f"({prefix}) Illegal Expression Format '{expr}'"
+                raise ValueError(msg)
         else:
             msg = f"({prefix}) Illegal Expression Format '{expr}'"
             raise ValueError(msg)
 
-    def check_range(self, expr, mi, mx, prefix, type=None):
+    def check_range(self, type=None, **kwargs):
         """
         check if expression value within range of specified limit
         """
-        if not mi <= int(expr) <= mx:
+        prefix = kwargs["prefix"]
+        mi = kwargs["mi"]
+        mx = kwargs["mx"]
+        expr = kwargs["expr"]
+        if int(expr) < mi or mx < int(expr):
             if type is None:
                 msg = f"{prefix} values must be between {mi} and {mx} but '{expr}' is provided"
             elif type == "interval":
@@ -553,11 +600,18 @@ class CronValidator:
             elif type == "dow":
                 msg = f"({prefix}) Accepted week value is {mi}~{mx} but '{expr}' is provided"
             raise ValueError(msg)
+        else:
+            pass
 
-    def compare_range(self, mi, mx, st, ed, prefix, type=None):
+    def compare_range(self, type=None, **kwargs):
         """check 2 expression values size
         does not allow {st} value to be greater than {ed} value
         """
+        prefix = kwargs["prefix"]
+        st = kwargs["st"]
+        ed = kwargs["ed"]
+        mi = kwargs["mi"]
+        mx = kwargs["mx"]
         if int(st) > int(ed):
             if type is None:
                 msg = (
