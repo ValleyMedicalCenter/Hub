@@ -80,9 +80,8 @@ class CronValidator:
         */nn
         nn,nn,nn (Maximum 24 elements)
         """
-        if expr is None:
+        if expr is None or expr == "":
             pass
-
         elif "*" == expr:
             pass
         elif re.match(r"^\d*$", expr):
@@ -105,17 +104,13 @@ class CronValidator:
             self.check_range(expr=fst_parts[0], mi=mi, mx=mx, prefix=prefix)
             self.check_range(expr=fst_parts[1], mi=mi, mx=mx, prefix=prefix)
             self.compare_range(
-                st=fst_parts[0], ed=fst_parts[1], mi=1, mx=mx, prefix=prefix
+                st=fst_parts[0], ed=fst_parts[1], mi=mi, mx=mx, prefix=prefix
             )
-            self.check_range(
-                type="interval", expr=parts[1], mi=mi, mx=mx, prefix=prefix
-            )
+            self.check_range(type="interval", expr=parts[1], mi=1, mx=mx, prefix=prefix)
 
         elif re.match(r"^\*/\d*$", expr):
             parts = expr.split("/")
-            self.check_range(
-                type="interval", expr=parts[1], mi=mi, mx=mx, prefix=prefix
-            )
+            self.check_range(type="interval", expr=parts[1], mi=1, mx=mx, prefix=prefix)
 
         elif "," in expr:
             expr_ls = expr.split(",")
@@ -145,7 +140,7 @@ class CronValidator:
         last sss
         """
         mi, mx = (1, 31)
-        if expr is None:
+        if expr is None or expr == "":
             pass
         elif "*" == expr:
             pass
@@ -224,7 +219,7 @@ class CronValidator:
         nn,nn,nn,nn-nn,sss-sss (Maximum 12 elements)
         """
         mi, mx = (1, 12)
-        if expr is None:
+        if expr is None or expr == "":
             pass
         elif "*" == expr:
             pass
@@ -308,7 +303,7 @@ class CronValidator:
         n-n,sss-sss (maximum 7 elements)
         """
         mi, mx = (0, 6)
-        if expr is None:
+        if expr is None or expr == "":
             pass
         elif "*" == expr:
             pass
