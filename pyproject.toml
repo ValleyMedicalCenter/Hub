@@ -118,7 +118,6 @@ SQLAlchemy-Utils = "^0.41.0"
 azure-devops = "^7.1.0b4"
 bs4 = "^0.0.2"
 cryptography = "^42.0.5"
-flask-assets = {git = "https://github.com/christopherpickering/flask-assets.git"}
 flask-redis = "^0.4.0"
 flask-session2 = "^1.3.1"
 gevent = "^24.2.1"
