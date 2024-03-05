@@ -357,7 +357,7 @@ class ExpressionDescriptor:
             description = ", on the last day of the month"
         elif re.match(r"last\s\D{3}$", exp, re.IGNORECASE):
             parts = exp.split()
-            description = f", on the last {parts[1].upper()} of the month"
+            description = f", on the last {get_day_name(parts[1].upper())} of the month"
 
         else:
             description = self.get_segment_description(

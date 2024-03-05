@@ -141,7 +141,7 @@ class CronValidator:
             self._number_validate(expr=expr, prefix=prefix, mi=mi, mx=mx, limit=31)
         elif "last" == expr.lower():
             pass
-        elif re.match(r"^[0-5](nd|st|rd|th)\s\D{3}$", expr, re.IGNORECASE):
+        elif re.match(r"^[1-5](nd|st|rd|th)\s\D{3}$", expr, re.IGNORECASE):
             parts = expr.split()
             parts[0] = re.sub("[nd|st|rd|th]", "", parts[0])
             try:
