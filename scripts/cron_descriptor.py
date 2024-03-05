@@ -1,24 +1,7 @@
-# The MIT License (MIT)
-#
-# Copyright (c) 2016 Adam Schubert
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+"""
+Cron schedule descriptions.
+Returns schedules in a readable format.
+"""
 
 import calendar
 import datetime
@@ -73,32 +56,6 @@ class ExpressionDescriptor:
             self.cron_day = "*"
         if self.cron_week_day is None or self.cron_week_day == "":
             self.cron_week_day = "*"
-
-    def get_description(self, description_type=1):
-        """Generates a humanreadable string for the Cron Expression
-
-        Args:
-            description_type: Which part(s) of the expression to describe
-        Returns:
-            The cron expression description
-        Raises:
-            Exception:
-
-        """
-        choices = {
-            1: self.get_full_description,
-            2: self.get_time_of_day_description,
-            3: self.get_hours_description,
-            4: self.get_minutes_description,
-            5: self.get_seconds_description,
-            6: self.get_day_of_month_description,
-            7: self.get_month_description,
-            8: self.get_day_of_week_description,
-            9: self.get_year_description,
-            10: self.get_week_number_description,
-        }
-
-        return choices.get(description_type, self.get_seconds_description)()
 
     def get_full_description(self):
         """Generates the FULL description
@@ -211,19 +168,13 @@ class ExpressionDescriptor:
 
         """
 
-        def get_description_format(s):
-            if s == "0":
-                return ""
-
-            return "at {0} seconds past the minute"
-
         return self.get_segment_description(
             self.cron_sec,
             "every second",
             lambda s: s,
             lambda s: f"every {s} seconds",
             lambda s: "seconds {0} through {1} past the minute",
-            get_description_format,
+            lambda s: "" if s == "0" else "at {0} seconds past the minute",
             lambda s: ", {0} through {1}",
         )
 
@@ -234,21 +185,15 @@ class ExpressionDescriptor:
             The MINUTE description
 
         """
-        seconds_expression = self.cron_sec
-
-        def get_description_format(s):
-            if s == "0" and seconds_expression == "":
-                return ""
-
-            return "at {0} minutes past the hour"
-
         return self.get_segment_description(
             self.cron_min,
             "every minute",
             lambda s: s,
             lambda s: f"every {s} minutes",
             lambda s: "minutes {0} through {1} past the hour",
-            get_description_format,
+            lambda s: ""
+            if s == "0" and self.cron_sec == ""
+            else "at {0} minutes past the hour",
             lambda s: ", {0} through {1}",
         )
 
@@ -417,7 +362,7 @@ class ExpressionDescriptor:
         else:
             description = self.get_segment_description(
                 exp,
-                ", every day",
+                ", every day" if self.cron_week_day == "*" else "",
                 lambda s: s,
                 lambda s: ", every day" if s == "1" else ", every {0} days",
                 lambda s: ", between day {0} and {1} of the month",
@@ -661,20 +606,19 @@ class ExpressionDescriptor:
             raise IndexError(f"Day {day_number} is out of range!")
 
     def __str__(self):
-        return self.get_description()
+        return self.get_full_description()
 
     def __repr__(self):
-        return self.get_description()
+        return self.get_full_description()
 
 
 def get_description(expression):
     """Generates a human readable string for the Cron Expression
     Args:
         expression: The cron expression string
-        options: Options to control the output description
     Returns:
         The cron expression description
 
     """
     descriptor = ExpressionDescriptor(expression)
-    return descriptor.get_description(1)
+    return descriptor.get_full_description()
