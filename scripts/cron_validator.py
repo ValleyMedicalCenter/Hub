@@ -27,7 +27,7 @@ import re
 class CronValidator:
     """Group of functions to make sure each cron field is correct"""
 
-    _cron_days = {v: k for (k, v) in enumerate(calendar.day_abbr)}
+    _cron_days = {v.upper(): k for (k, v) in enumerate(calendar.day_abbr)}
     _cron_months = {v.upper(): k for (k, v) in enumerate(calendar.month_abbr) if k != 0}
 
     def __init__(
@@ -154,25 +154,23 @@ class CronValidator:
                 for dayofmonth in expr_ls:
                     self._day_of_month(expr=dayofmonth.strip(), prefix=prefix)
         # if it is number only then just use _number_validate function
-        elif re.match(r"[\d{1,2}|*][-\d{1,2}]?[/\d{1,2}]?", expr):
+        elif re.match(r"^[\d{1,2}|\*][-\d{1,2}]?[/\d{1,2}]?$", expr):
             self._number_validate(expr=expr, prefix=prefix, mi=mi, mx=mx, limit=31)
         elif "last" == expr.lower():
             pass
         elif re.match(r"^[0-5](nd|st|rd|th)\s\D{3}$", expr, re.IGNORECASE):
             parts = expr.split()
             parts[0] = re.sub("[nd|st|rd|th]", "", parts[0])
-            cron_days = {v: k for (k, v) in self._cron_days.items()}
             try:
-                st_day = cron_days[parts[1].upper()]
+                st_day = self._cron_days[parts[1].upper()]
             except KeyError:
                 msg = f"({prefix}) Invalid value '{expr}'"
                 raise ValueError(msg)
             self.check_range(expr=parts[0], mi=mi, mx=5, prefix=prefix, type=None)
         elif re.match(r"^last\s\D{3}$", expr, re.IGNORECASE):
             parts = expr.split()
-            cron_days = {v: k for (k, v) in self._cron_days.items()}
             try:
-                st_day = cron_days[parts[1].upper()]
+                st_day = self._cron_days[parts[1].upper()]
             except KeyError:
                 msg = f"({prefix}) Invalid value '{expr}'"
                 raise ValueError(msg)
@@ -210,25 +208,25 @@ class CronValidator:
                 for mon in expr_ls:
                     self._month(expr=mon.strip(), prefix=prefix)
         # if it is number only then just use _number_validate function
-        elif re.match(r"[\d{1,2}|*][-\d{1,2}]?[/\d{1,2}]?", expr):
+        elif re.match(r"[\d{1,2}|\*][-\d{1,2}]?[/\d{1,2}]?", expr):
             self._number_validate(expr=expr, prefix=prefix, mi=mi, mx=mx, limit=12)
         elif re.match(r"\D{3}$", expr):
-            matched_month = [m for m in self._cron_months.values() if expr.upper() == m]
-            if len(matched_month) == 0:
+            try:
+                st_mon = self._cron_months[expr.upper()]
+            except KeyError:
                 msg = f"Invalid Month value '{expr}'"
                 raise ValueError(msg)
         elif re.match(r"\D{3}-\D{3}$", expr):
             parts = expr.split("-")
-            cron_months = {v: k for (k, v) in self._cron_months.items()}
-            if (
-                parts[0].upper() not in cron_months
-                or parts[1].upper() not in cron_months
-            ):
+            try:
+                st_mon = self._cron_months[parts[0].upper()]
+                ed_mon = self._cron_months[parts[1].upper()]
+            except KeyError:
                 msg = f"Invalid Month value '{expr}'"
                 raise ValueError(msg)
             self.compare_range(
-                st=cron_months[parts[0]],
-                ed=cron_months[parts[1]],
+                st=st_mon,
+                ed=ed_mon,
                 mi=mi,
                 mx=mx,
                 prefix=prefix,
@@ -265,21 +263,15 @@ class CronValidator:
                 for day in expr_ls:
                     self._day_of_week(expr=day.strip(), prefix=prefix)
         # if it is number only then just use _number_validate function
-        elif re.match(r"[\d{1}|*][-\d{1}]?[/\d{1}]?", expr):
+        elif re.match(r"[\d{1}|\*][-\d{1}]?[/\d{1}]?", expr):
             self._number_validate(expr=expr, prefix=prefix, mi=mi, mx=mx, limit=7)
-        elif re.match(r"\D{3}$", expr):
-            cron_days = {v: k for (k, v) in self._cron_days.items()}
-            if expr.upper() in cron_days:
-                pass
-            else:
-                msg = f"Invalid value '{expr}'"
-                raise ValueError(msg)
+        elif self._cron_days[expr.upper()]:
+            pass
         elif re.match(r"\D{3}-\D{3}$", expr):
             parts = expr.split("-")
-            cron_days = {v: k for (k, v) in self._cron_days.items()}
             try:
-                st_day = cron_days[parts[0].upper()]
-                ed_day = cron_days[parts[1].upper()]
+                st_day = self._cron_days[parts[0].upper()]
+                ed_day = self._cron_days[parts[1].upper()]
             except KeyError:
                 msg = f"({prefix}) Invalid value '{expr}'"
                 raise ValueError(msg)
