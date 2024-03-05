@@ -108,7 +108,7 @@ def one_project(project_id: int) -> Union[str, Response]:
                 cron_hour=me.cron_hour,
                 cron_min=me.cron_min,
                 cron_sec=me.cron_sec,
-            ).get_description()
+            ).get_full_description()
         except ValueError as e:
             desc = e
 
