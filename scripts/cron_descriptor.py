@@ -289,9 +289,7 @@ class ExpressionDescriptor:
         return self.get_segment_description(
             self.cron_month,
             "",
-            lambda s: datetime.date(
-                datetime.date.today().year, int(get_month_number(s)), 1
-            ).strftime("%B"),
+            lambda s: calendar.month_name[int(get_month_number(s))],
             lambda s: f", every {s} months",
             lambda s: ", {0} through {1}",
             lambda s: ", only in {0}",
@@ -333,8 +331,18 @@ class ExpressionDescriptor:
 
         """
 
+        def add_suffix(day):
+            try:
+                d = int(day)
+                if 10 <= d % 100 <= 20:
+                    suffix = "th"
+                else:
+                    suffix = {1: "st", 2: "nd", 3: "rd"}.get(d % 10, "th")
+                return str(d) + suffix + " day"
+            except ValueError:
+                return day
+
         def get_day_name(s):
-            exp = s
             day_choices = {
                 "mon": 0,
                 "tue": 1,
@@ -345,17 +353,14 @@ class ExpressionDescriptor:
                 "sun": 6,
             }
             try:
-                return self.number_to_day(int(day_choices.get(exp.lower(), exp)))
+                return self.number_to_day(int(day_choices.get(s.lower(), s)))
             except:
-                return exp
+                return s
 
         exp = self.cron_day
-        if re.match(r"\d{1}(nd|st|rd|th)\s\D{3}$", exp, re.IGNORECASE):
-            parts = exp.split()
-            description = f", on the {parts[0].lower()} {get_day_name(parts[1].upper())} of the month"
-        elif exp.lower() == "last":
+        if exp.lower() == "last":
             description = ", on the last day of the month"
-        elif re.match(r"last\s\D{3}$", exp, re.IGNORECASE):
+        elif re.match(r"^last\s\D{3}$", exp, re.IGNORECASE):
             parts = exp.split()
             description = f", on the last {get_day_name(parts[1].upper())} of the month"
 
@@ -363,12 +368,10 @@ class ExpressionDescriptor:
             description = self.get_segment_description(
                 exp,
                 ", every day" if self.cron_week_day == "*" else "",
-                lambda s: s,
+                lambda s: add_suffix(s),
                 lambda s: ", every day" if s == "1" else ", every {0} days",
-                lambda s: ", between day {0} and {1} of the month",
-                lambda s: " on the {0} day of the month"
-                if s.isdigit()
-                else " on the {0} of the month",
+                lambda s: ", between {0} and {1} day of the month",
+                lambda s: " on the {0} of the month",
                 lambda s: ", {0} through {1}",
             )
 
@@ -462,7 +465,9 @@ class ExpressionDescriptor:
             for i in range(len(segments)):
                 segments[i] = segments[i].strip()
                 daypart = segments[i].split()
-                if len(daypart) > 1 and daypart[1].lower() in day_choices:
+                if len(daypart) > 1 and daypart[1].lower() in map(
+                    str.lower, calendar.day_abbr
+                ):
                     segments[
                         i
                     ] = f"{daypart[0]} {self.number_to_day(day_choices.get(daypart[1].lower()))}"
@@ -470,7 +475,7 @@ class ExpressionDescriptor:
 
             for i, segment in enumerate(segments):
                 if i > 0 and len(segments) > 2:
-                    description_content += ","
+                    description_content += ", "
 
                     if i < len(segments) - 1:
                         description_content += " "
