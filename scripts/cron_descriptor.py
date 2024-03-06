@@ -371,6 +371,33 @@ class ExpressionDescriptor:
             description = get_description_format(expression).format(
                 get_single_item_description(expression)
             )
+        elif "," in expression:
+            segments = expression.split(",")
+            description_content = ""
+            for i, seg in enumerate(segments):
+                seg = seg.strip()
+                if i > 0 and len(segments) > 2:
+                    description_content += ", "
+
+                    if i < len(segments) - 1:
+                        description_content += " "
+
+                if (
+                    i > 0
+                    and len(segments) > 1
+                    and (i == len(segments) - 1 or len(segments) == 2)
+                ):
+                    description_content += " and "
+                description_content += self.get_segment_description(
+                    seg,
+                    all_description,
+                    get_single_item_description,
+                    get_interval_description_format,
+                    get_between_description_format,
+                    get_description_format,
+                    get_range_format,
+                )
+            description = get_description_format(expression).format(description_content)
         elif " " in expression and not any(
             ext in expression for ext in ["/", "-", ","]
         ):
@@ -406,49 +433,6 @@ class ExpressionDescriptor:
                 range_item_description = range_item_description.replace(", ", "")
 
                 description += f", starting {range_item_description}"
-        elif "," in expression:
-            segments = expression.split(",")
-            for i in range(len(segments)):
-                segments[i] = segments[i].strip()
-                daypart = segments[i].split()
-                if len(daypart) > 1 and daypart[1].lower() in map(
-                    str.lower, calendar.day_abbr
-                ):
-                    segments[
-                        i
-                    ] = f"{daypart[0]} {calendar.day_name[self._cron_days[daypart[1].upper()]]}"
-            description_content = ""
-
-            for i, segment in enumerate(segments):
-                if i > 0 and len(segments) > 2:
-                    description_content += ", "
-
-                    if i < len(segments) - 1:
-                        description_content += " "
-
-                if (
-                    i > 0
-                    and len(segments) > 1
-                    and (i == len(segments) - 1 or len(segments) == 2)
-                ):
-                    description_content += " and "
-
-                if "-" in segment:
-                    between_segment_description = (
-                        self.generate_between_segment_description(
-                            segment, get_range_format, get_single_item_description
-                        )
-                    )
-
-                    between_segment_description = between_segment_description.replace(
-                        ", ", ""
-                    )
-
-                    description_content += between_segment_description
-                else:
-                    description_content += get_single_item_description(segment)
-
-            description = get_description_format(expression).format(description_content)
         elif "-" in expression:
             description = self.generate_between_segment_description(
                 expression, get_between_description_format, get_single_item_description
