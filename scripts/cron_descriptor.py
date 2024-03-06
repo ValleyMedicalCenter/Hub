@@ -29,14 +29,16 @@ class ExpressionDescriptor:
         cron_sec="0",
     ) -> None:
         """Initializes a new instance of the ExpressionDescriptor"""
-        self.cron_year = cron_year
-        self.cron_month = cron_month
-        self.cron_week = cron_week
-        self.cron_day = cron_day
-        self.cron_week_day = cron_week_day
-        self.cron_hour = cron_hour
-        self.cron_min = cron_min
-        self.cron_sec = cron_sec
+        self.cron_year = "*" if cron_year is None or cron_year == "" else cron_year
+        self.cron_month = "*" if cron_month is None or cron_month == "" else cron_month
+        self.cron_week = "*" if cron_week is None or cron_week == "" else cron_week
+        self.cron_day = "*" if cron_day is None or cron_day == "" else cron_day
+        self.cron_week_day = (
+            "*" if cron_week_day is None or cron_week_day == "" else cron_week_day
+        )
+        self.cron_hour = "0" if cron_hour is None or cron_hour == "" else cron_hour
+        self.cron_min = "0" if cron_min is None or cron_min == "" else cron_min
+        self.cron_sec = "0" if cron_sec is None or cron_sec == "" else cron_sec
 
     def get_full_description(self):
         """Generates the FULL description
@@ -148,9 +150,9 @@ class ExpressionDescriptor:
             "every second",
             lambda s: s,
             lambda s: f"every {s} seconds",
-            lambda s: f"seconds {s[0]} through {s[1]} past the minute",
-            lambda s: "" if s == "0" else f"at {s[0]} seconds past the minute",
-            lambda s: f", {s[0]} through {s[1]}",
+            lambda s: "seconds {0} through {1} past the minute",
+            lambda s: "" if s == "0" else "at {0} seconds past the minute",
+            lambda s: ", {0} through {1}",
         )
 
     def get_minutes_description(self):
@@ -165,11 +167,11 @@ class ExpressionDescriptor:
             "every minute",
             lambda s: s,
             lambda s: f"every {s} minutes",
-            lambda s: f"minutes {s[0]} through {s[1]} past the hour",
+            lambda s: "minutes {0} through {1} past the hour",
             lambda s: ""
             if s == "0" and self.cron_sec == ""
-            else f"at {s[0]} minutes past the hour",
-            lambda s: f", {s[0]} through {s[1]}",
+            else "at {0} minutes past the hour",
+            lambda s: ", {0} through {1}",
         )
 
     def get_hours_description(self):
@@ -184,9 +186,9 @@ class ExpressionDescriptor:
             "every hour",
             lambda s: self.format_time(s, "0"),
             lambda s: f"every {s} hours",
-            lambda s: f"between {s[0]} and {s[1]}",
-            lambda s: f"at {s[0]}",
-            lambda s: f", {s[0]} through {s[1]}",
+            lambda s: "between {0} and {1}",
+            lambda s: "at {0}",
+            lambda s: ", {0} through {1}",
         )
 
     def get_day_of_week_description(self):
@@ -214,9 +216,9 @@ class ExpressionDescriptor:
             ", every day",
             lambda s: get_day_name(s),
             lambda s: f", every {s} days of the week",
-            lambda s: f", {s[0]} through {s[1]}",
-            lambda s: f", only on {s[0]}",
-            lambda s: f", {s[0]} through {s[1]}",
+            lambda s: ", {0} through {1}",
+            lambda s: ", only on {0}",
+            lambda s: ", {0} through {1}",
         )
 
     def get_week_number_description(self):
@@ -231,9 +233,9 @@ class ExpressionDescriptor:
             "",
             lambda s: s,
             lambda s: f", every {s} weeks",
-            lambda s: f", week {s[0]} through {s[1]}",
-            lambda s: f", only on week {s[0]} of the year",
-            lambda s: f", week {s[0]} through {s[1]}",
+            lambda s: ", week {0} through {1}",
+            lambda s: ", only on week {0} of the year",
+            lambda s: ", week {0} through {1}",
         )
 
     def get_month_description(self):
@@ -257,9 +259,9 @@ class ExpressionDescriptor:
             "",
             lambda s: calendar.month_name[int(get_month_number(s))],
             lambda s: f", every {s} months",
-            lambda s: f", {s[0]} through {s[1]}",
-            lambda s: f", only in {s[0]}",
-            lambda s: f", {s[0]} through {s[1]}",
+            lambda s: ", {0} through {1}",
+            lambda s: ", only in {0}",
+            lambda s: ", {0} through {1}",
         )
 
     def get_day_of_month_description(self):
@@ -293,10 +295,10 @@ class ExpressionDescriptor:
                 exp,
                 ", every day" if self.cron_week_day == "*" else "",
                 lambda s: _add_suffix(s),
-                lambda s: f", every day" if s == "1" else ", every {s[0]} days",
-                lambda s: f", between {s[0]} and {s[1]} day of the month",
-                lambda s: f" on the {s[0]} of the month",
-                lambda s: f", {s[0]} through {s[1]}",
+                lambda s: ", every day" if s == "1" else ", every {0} days",
+                lambda s: ", between {0} and {1} day of the month",
+                lambda s: " on the {0} of the month",
+                lambda s: ", {0} through {1}",
             )
 
         return description
@@ -313,9 +315,9 @@ class ExpressionDescriptor:
             "",
             lambda s: s,
             lambda s: f", every {s} years",
-            lambda s: f", year {s[0]} through year {s[1]}",
-            lambda s: f", only in {s[0]}",
-            lambda s: f", year {s[0]} through year {s[1]}",
+            lambda s: ", year {0} through year {1}",
+            lambda s: ", only in {0}",
+            lambda s: ", year {0} through year {1}",
         )
 
     def get_segment_description(
