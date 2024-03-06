@@ -14,6 +14,7 @@ class ExpressionDescriptor:
     Converts a Cron Expression into a human readable string
     """
 
+    _cron_days = {v.upper(): k for (k, v) in enumerate(calendar.day_abbr)}
     _special_characters = ["/", "-", ",", "*"]
 
     def __init__(
@@ -342,27 +343,12 @@ class ExpressionDescriptor:
             except ValueError:
                 return day
 
-        def get_day_name(s):
-            day_choices = {
-                "mon": 0,
-                "tue": 1,
-                "wed": 2,
-                "thu": 3,
-                "fri": 4,
-                "sat": 5,
-                "sun": 6,
-            }
-            try:
-                return self.number_to_day(int(day_choices.get(s.lower(), s)))
-            except:
-                return s
-
         exp = self.cron_day
         if exp.lower() == "last":
             description = ", on the last day of the month"
         elif re.match(r"^last\s\D{3}$", exp, re.IGNORECASE):
             parts = exp.split()
-            description = f", on the last {get_day_name(parts[1].upper())} of the month"
+            description = f", on the last {calendar.day_name[self._cron_days[parts[1].upper()]]} of the month"
 
         else:
             description = self.get_segment_description(
@@ -417,22 +403,23 @@ class ExpressionDescriptor:
             segment description
 
         """
-        day_choices = {
-            "mon": 0,
-            "tue": 1,
-            "wed": 2,
-            "thu": 3,
-            "fri": 4,
-            "sat": 5,
-            "sun": 6,
-        }
 
         description = None
+        expression = expression.strip()
         if expression is None or expression == "":
             description = ""
         elif expression == "*":
             description = all_description
-        elif any(ext in expression for ext in ["/", "-", ","]) is False:
+        elif any(ext in expression for ext in ["/", "-", ",", " "]) is False:
+            description = get_description_format(expression).format(
+                get_single_item_description(expression)
+            )
+        elif " " in expression:
+            daypart = expression.split()
+            if len(daypart) > 1 and daypart[1].lower() in map(
+                str.lower, calendar.day_abbr
+            ):
+                expression = f"{daypart[0]} {calendar.day_name[self._cron_days[daypart[1].upper()]]}"
             description = get_description_format(expression).format(
                 get_single_item_description(expression)
             )
@@ -470,7 +457,7 @@ class ExpressionDescriptor:
                 ):
                     segments[
                         i
-                    ] = f"{daypart[0]} {self.number_to_day(day_choices.get(daypart[1].lower()))}"
+                    ] = f"{daypart[0]} {calendar.day_name[self._cron_days[daypart[1].upper()]]}"
             description_content = ""
 
             for i, segment in enumerate(segments):
