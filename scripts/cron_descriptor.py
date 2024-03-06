@@ -50,6 +50,19 @@ class ExpressionDescriptor:
 
         """
 
+        def remove_adjacent_duplicates(sentence):
+            """remove duplicate words that might pop up such as week week"""
+            words = sentence.split()
+            unique_words = [
+                words[0]
+            ]  # Initialize unique words list with the first word
+            for word in words[1:]:
+                if (
+                    word != unique_words[-1]
+                ):  # Check if the current word is different from the previous word
+                    unique_words.append(word)
+            return " ".join(unique_words)
+
         try:
             time_segment = self.get_time_of_day_description()
             day_of_month_desc = self.get_day_of_month_description()
@@ -59,7 +72,9 @@ class ExpressionDescriptor:
             year_desc = self.get_year_description()
 
             description = f"{time_segment}{day_of_month_desc}{day_of_week_desc}{month_desc}{week_desc}{year_desc}"
-            description = description.capitalize()
+            description = remove_adjacent_duplicates(description)
+            description = f"{description[0].upper()}{description[1:]}"
+
         except Exception as e:
             description = f"An error occurred when generating the expression description.  error is {e}"
 
@@ -247,17 +262,16 @@ class ExpressionDescriptor:
         """
 
         def get_month_number(s):
-            exp = s
-
             try:
-                return list(calendar.month_abbr).index(exp.title())
+                exp = int(s)
+                return calendar.month_name[list(calendar.month_abbr).index(exp.title())]
             except:
-                return exp
+                return s
 
         return self.get_segment_description(
             self.cron_month,
             "",
-            lambda s: calendar.month_name[int(get_month_number(s))],
+            lambda s: get_month_number(s),
             lambda s: f", every {s} months",
             lambda s: ", {0} through {1}",
             lambda s: ", only in {0}",
@@ -354,7 +368,9 @@ class ExpressionDescriptor:
             description = get_description_format(expression).format(
                 get_single_item_description(expression)
             )
-        elif " " in expression:
+        elif " " in expression and not any(
+            ext in expression for ext in ["/", "-", ","]
+        ):
             daypart = expression.split()
             if len(daypart) > 1 and daypart[1].lower() in map(
                 str.lower, calendar.day_abbr
