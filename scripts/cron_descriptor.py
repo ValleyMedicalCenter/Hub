@@ -261,17 +261,20 @@ class ExpressionDescriptor:
 
         """
 
-        def get_month_number(s):
+        def get_month_name(s):
             try:
-                exp = int(s)
-                return calendar.month_name[list(calendar.month_abbr).index(exp.title())]
+                return calendar.month_name[int(s)]
+            except:
+                pass
+            try:
+                return calendar.month_name[list(calendar.month_abbr).index(s.title())]
             except:
                 return s
 
         return self.get_segment_description(
             self.cron_month,
             "",
-            lambda s: get_month_number(s),
+            lambda s: get_month_name(s),
             lambda s: f", every {s} months",
             lambda s: ", {0} through {1}",
             lambda s: ", only in {0}",
