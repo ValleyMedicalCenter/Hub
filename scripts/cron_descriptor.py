@@ -220,11 +220,14 @@ class ExpressionDescriptor:
             return ""
 
         def get_day_name(s):
-            exp = s
             try:
-                return calendar.day_name[self._cron_days[exp.upper()]]
+                return calendar.day_name[int(s)]
             except:
-                return exp
+                pass
+            try:
+                return calendar.day_name[list(calendar.day_abbr).index(s.title())]
+            except:
+                return s
 
         return self.get_segment_description(
             self.cron_week_day,
