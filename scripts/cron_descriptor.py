@@ -507,44 +507,8 @@ class ExpressionDescriptor:
 
         return f"{str(hour).zfill(2)}:{minute.zfill(2)}{second}{period}"
 
-    @staticmethod
-    def number_to_day(day_number):
-        """Returns localized day name by its CRON number
-
-        Args:
-            day_number: Number of a day
-        Returns:
-            Day corresponding to day_number
-        Raises:
-            IndexError: When day_number is not found
-        """
-        try:
-            return [
-                calendar.day_name[0],
-                calendar.day_name[1],
-                calendar.day_name[2],
-                calendar.day_name[3],
-                calendar.day_name[4],
-                calendar.day_name[5],
-                calendar.day_name[6],
-            ][day_number]
-        except IndexError:
-            raise IndexError(f"Day {day_number} is out of range!")
-
     def __str__(self):
         return self.get_full_description()
 
     def __repr__(self):
         return self.get_full_description()
-
-
-def get_description(expression):
-    """Generates a human readable string for the Cron Expression
-    Args:
-        expression: The cron expression string
-    Returns:
-        The cron expression description
-
-    """
-    descriptor = ExpressionDescriptor(expression)
-    return descriptor.get_full_description()
