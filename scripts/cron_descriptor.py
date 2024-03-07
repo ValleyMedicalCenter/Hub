@@ -397,6 +397,9 @@ class ExpressionDescriptor:
                     get_single_item_description,
                     get_range_format,
                 )
+                # replace weirdness
+                description_content = description_content.replace("and ,", "and")
+                description_content = description_content.replace("of the month", "")
 
             description = get_description_format(expression).format(description_content)
         elif " " in expression and not any(
