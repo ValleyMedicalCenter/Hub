@@ -137,7 +137,10 @@ class CronValidator:
                 for dayofmonth in expr_ls:
                     self._day_of_month(expr=dayofmonth.strip(), prefix=prefix)
         # if it is number only then just use _number_validate function
-        elif re.match(r"^[\d{1,2}|\*][-\d{1,2}]?[/\d{1,2}]*$", expr):
+        elif re.match(
+            r"^(\*|(\d{1,2})-(\d{1,2})(/(\d{1,2}))?|\*/\d{1,2}|\d{1,2}(/\d{1,2})?)$",
+            expr,
+        ):
             self._number_validate(expr=expr, prefix=prefix, mi=mi, mx=mx, limit=31)
         elif "last" == expr.lower():
             pass
@@ -191,7 +194,10 @@ class CronValidator:
                 for mon in expr_ls:
                     self._month(expr=mon.strip(), prefix=prefix)
         # if it is number only then just use _number_validate function
-        elif re.match(r"^[\d{1,2}|\*][-\d{1,2}]?[/\d{1,2}]*$", expr):
+        elif re.match(
+            r"^(\*|(\d{1,2})-(\d{1,2})(/(\d{1,2}))?|\*/\d{1,2}|\d{1,2}(/\d{1,2})?)$",
+            expr,
+        ):
             self._number_validate(expr=expr, prefix=prefix, mi=mi, mx=mx, limit=12)
         elif re.match(r"\D{3}$", expr):
             try:
@@ -246,7 +252,9 @@ class CronValidator:
                 for day in expr_ls:
                     self._day_of_week(expr=day.strip(), prefix=prefix)
         # if it is number only then just use _number_validate function
-        elif re.match(r"^[\d{1}|\*][-\d{1}]?[/\d{1}]*$", expr):
+        elif re.match(
+            r"^(\*|(\d{1})-(\d{1})(/(\d{1}))?|\*/\d{1}|\d{1}(/\d{1})?)$", expr
+        ):
             self._number_validate(expr=expr, prefix=prefix, mi=mi, mx=mx, limit=7)
         elif expr.upper() in self._cron_days.keys():
             pass

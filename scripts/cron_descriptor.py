@@ -312,7 +312,7 @@ class ExpressionDescriptor:
                 exp,
                 ", every day" if self.cron_week_day == "*" else "",
                 lambda s: _add_suffix(s),
-                lambda s: ", every day" if s == "1" else ", every {0} days",
+                lambda s: ", every day" if s == "1" else ", every {0}",
                 lambda s: ", between {0} and {1} day of the month",
                 lambda s: " on the {0} of the month",
                 lambda s: ", {0} through {1}",
@@ -394,9 +394,10 @@ class ExpressionDescriptor:
                     get_single_item_description,
                     get_interval_description_format,
                     get_between_description_format,
-                    get_description_format,
+                    get_single_item_description,
                     get_range_format,
                 )
+
             description = get_description_format(expression).format(description_content)
         elif " " in expression and not any(
             ext in expression for ext in ["/", "-", ","]
