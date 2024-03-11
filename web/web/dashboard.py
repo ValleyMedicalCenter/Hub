@@ -32,111 +32,105 @@ dashboard_bp = Blueprint("dashboard_bp", __name__)
 
 @dashboard_bp.route("/search")
 @login_required
-def search() -> dict:
+def search() -> Response:
     """Search data."""
     my_json = {}
 
-    tasks = db.session.query(Task.id, Task.name).order_by(Task.name).all()
+    tasks = db.session.query(Task.c.id, Task.c.name).order_by(Task.c.name).all()
     task_json = {}
     for t_id, t_name in tasks:
         task_json[url_for("task_bp.one_task", task_id=t_id)] = t_name
 
     project_json = {}
-    projects = db.session.query(Project.id, Project.name).order_by(Project.name).all()
+    projects = db.session.query(Project.c.id, Project.c.name).order_by(Project.c.name).all()
     for t_id, t_name in projects:
         project_json[url_for("project_bp.one_project", project_id=t_id)] = t_name
 
     user_json = {}
-    users = db.session.query(User.id, User.full_name).order_by(User.full_name).all()
+    users = db.session.query(User.c.id, User.c.full_name).order_by(User.c.full_name).all()
     for t_id, t_name in users:
         user_json[url_for("project_bp.user_projects", user_id=t_id)] = t_name
 
     connection_json = {}
     connections = (
         db.session.query(
-            Connection.id,
-            Connection.name,
-            Connection.description,
-            Connection.address,
-            Connection.primary_contact,
-            Connection.primary_contact_email,
-            Connection.primary_contact_phone,
+            Connection.c.id,
+            Connection.c.name,
+            Connection.c.description,
+            Connection.c.address,
+            Connection.c.primary_contact,
+            Connection.c.primary_contact_email,
+            Connection.c.primary_contact_phone,
         )
-        .order_by(Connection.name)
+        .order_by(Connection.c.name)
         .all()
     )
     for row in connections:
-        connection_json[
-            url_for("connection_bp.one_connection", connection_id=row[0])
-        ] = " / ".join([x for x in row[1:] if x.strip()])
+        connection_json[url_for("connection_bp.one_connection", connection_id=row[0])] = (
+            " / ".join([x for x in row[1:] if x.strip()])
+        )
 
     connection_sftp = {}
     sftp_connections = db.session.query(
-        ConnectionSftp.connection_id,
-        ConnectionSftp.id,
-        ConnectionSftp.name,
-        ConnectionSftp.address,
+        ConnectionSftp.c.connection_id,
+        ConnectionSftp.c.id,
+        ConnectionSftp.c.name,
+        ConnectionSftp.c.address,
     )
     for row in sftp_connections.all():
         connection_sftp[
-            url_for("connection_bp.one_connection", connection_id=row[0])
-            + f"?s={row[1]}"
+            url_for("connection_bp.one_connection", connection_id=row[0]) + f"?s={row[1]}"
         ] = " / ".join([x for x in row[2:] if x.strip()])
     connection_ftp = {}
     ftp_connections = db.session.query(
-        ConnectionFtp.connection_id,
-        ConnectionFtp.id,
-        ConnectionFtp.name,
-        ConnectionFtp.address,
+        ConnectionFtp.c.connection_id,
+        ConnectionFtp.c.id,
+        ConnectionFtp.c.name,
+        ConnectionFtp.c.address,
     )
     for row in ftp_connections.all():
         connection_ftp[
-            url_for("connection_bp.one_connection", connection_id=row[0])
-            + f"?s={row[1]}"
+            url_for("connection_bp.one_connection", connection_id=row[0]) + f"?s={row[1]}"
         ] = " / ".join([x for x in row[2:] if x.strip()])
     connection_database = {}
     database_connections = db.session.query(
-        ConnectionDatabase.connection_id, ConnectionDatabase.id, ConnectionDatabase.name
+        ConnectionDatabase.c.connection_id, ConnectionDatabase.c.id, ConnectionDatabase.c.name
     )
     for row in database_connections.all():
         connection_database[
-            url_for("connection_bp.one_connection", connection_id=row[0])
-            + f"?s={row[1]}"
+            url_for("connection_bp.one_connection", connection_id=row[0]) + f"?s={row[1]}"
         ] = " / ".join([x for x in row[2:] if x.strip()])
     connection_smb = {}
     smb_connections = db.session.query(
-        ConnectionSmb.connection_id,
-        ConnectionSmb.id,
-        ConnectionSmb.name,
-        ConnectionSmb.server_name,
-        ConnectionSmb.server_ip,
-        ConnectionSmb.share_name,
+        ConnectionSmb.c.connection_id,
+        ConnectionSmb.c.id,
+        ConnectionSmb.c.name,
+        ConnectionSmb.c.server_name,
+        ConnectionSmb.c.server_ip,
+        ConnectionSmb.c.share_name,
     )
     for row in smb_connections.all():
         connection_smb[
-            url_for("connection_bp.one_connection", connection_id=row[0])
-            + f"?s={row[1]}"
+            url_for("connection_bp.one_connection", connection_id=row[0]) + f"?s={row[1]}"
         ] = " / ".join([x for x in row[2:] if x.strip()])
     connection_ssh = {}
     ssh_connections = db.session.query(
-        ConnectionSsh.connection_id,
-        ConnectionSsh.id,
-        ConnectionSsh.name,
-        ConnectionSsh.address,
+        ConnectionSsh.c.connection_id,
+        ConnectionSsh.c.id,
+        ConnectionSsh.c.name,
+        ConnectionSsh.c.address,
     )
     for row in ssh_connections.all():
         connection_ssh[
-            url_for("connection_bp.one_connection", connection_id=row[0])
-            + f"?s={row[1]}"
+            url_for("connection_bp.one_connection", connection_id=row[0]) + f"?s={row[1]}"
         ] = " / ".join([x for x in row[2:] if x.strip()])
     connection_gpg = {}
     gpg_connections = db.session.query(
-        ConnectionGpg.connection_id, ConnectionGpg.id, ConnectionGpg.name
+        ConnectionGpg.c.connection_id, ConnectionGpg.c.id, ConnectionGpg.c.name
     )
     for row in gpg_connections.all():
         connection_gpg[
-            url_for("connection_bp.one_connection", connection_id=row[0])
-            + f"?s={row[1]}"
+            url_for("connection_bp.one_connection", connection_id=row[0]) + f"?s={row[1]}"
         ] = " / ".join([x for x in row[2:] if x.strip()])
 
     my_json["connection"] = connection_json
@@ -163,8 +157,8 @@ def home() -> Union[Response, str]:
     if (
         db.session.query()
         .select_from(Project)
-        .add_columns(Project.id)
-        .filter(Project.owner_id == current_user.id)
+        .add_columns(Project.c.id)
+        .filter(Project.c.owner_id == current_user.id)
         .first()
     ):
         return render_template(
@@ -226,9 +220,7 @@ def dash_orphans_delete() -> Response:
     """Button to delete any jobs without a linked tasks."""
     try:
         output = json.loads(
-            requests.get(
-                app.config["SCHEDULER_HOST"] + "/delete-orphans", timeout=60
-            ).text,
+            requests.get(app.config["SCHEDULER_HOST"] + "/delete-orphans", timeout=60).text,
         )
         msg = output["message"]
         add_user_log(msg, 0)

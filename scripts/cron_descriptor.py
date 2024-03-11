@@ -4,12 +4,10 @@ Returns schedules in a readable format.
 """
 
 import calendar
-import datetime
 import re
 
 
 class ExpressionDescriptor:
-
     """
     Converts a Cron Expression into a human readable string
     """
@@ -33,9 +31,7 @@ class ExpressionDescriptor:
         self.cron_month = "*" if cron_month is None or cron_month == "" else cron_month
         self.cron_week = "*" if cron_week is None or cron_week == "" else cron_week
         self.cron_day = "*" if cron_day is None or cron_day == "" else cron_day
-        self.cron_week_day = (
-            "*" if cron_week_day is None or cron_week_day == "" else cron_week_day
-        )
+        self.cron_week_day = "*" if cron_week_day is None or cron_week_day == "" else cron_week_day
         self.cron_hour = "0" if cron_hour is None or cron_hour == "" else cron_hour
         self.cron_min = "0" if cron_min is None or cron_min == "" else cron_min
         self.cron_sec = "0" if cron_sec is None or cron_sec == "" else cron_sec
@@ -53,9 +49,7 @@ class ExpressionDescriptor:
         def remove_adjacent_duplicates(sentence):
             """remove duplicate words that might pop up such as week week"""
             words = sentence.split()
-            unique_words = [
-                words[0]
-            ]  # Initialize unique words list with the first word
+            unique_words = [words[0]]  # Initialize unique words list with the first word
             for word in words[1:]:
                 if (
                     word != unique_words[-1]
@@ -76,7 +70,9 @@ class ExpressionDescriptor:
             description = f"{description[0].upper()}{description[1:]}"
 
         except Exception as e:
-            description = f"An error occurred when generating the expression description.  error is {e}"
+            description = (
+                f"An error occurred when generating the expression description.  error is {e}"
+            )
 
             raise ValueError(description) from e
 
@@ -98,11 +94,12 @@ class ExpressionDescriptor:
         if (
             any(exp in minute_expression for exp in self._special_characters) is False
             and any(exp in hour_expression for exp in self._special_characters) is False
-            and any(exp in seconds_expression for exp in self._special_characters)
-            is False
+            and any(exp in seconds_expression for exp in self._special_characters) is False
         ):
             # specific time of day (i.e. 10 14)
-            description = f"At {self.format_time(hour_expression, minute_expression, seconds_expression)} "
+            description = (
+                f"At {self.format_time(hour_expression, minute_expression, seconds_expression)} "
+            )
 
         elif (
             seconds_expression == ""
@@ -118,8 +115,7 @@ class ExpressionDescriptor:
             seconds_expression == ""
             and "," in hour_expression
             and "-" not in hour_expression
-            and any(exp in minute_expression for exp in self._special_characters)
-            is False
+            and any(exp in minute_expression for exp in self._special_characters) is False
         ):
             # hours list with single minute (o.e. 30 6,14,16)
             hour_parts = hour_expression.split(",")
@@ -183,9 +179,7 @@ class ExpressionDescriptor:
             lambda s: s,
             lambda s: f"every {s} minutes",
             lambda s: "minutes {0} through {1} past the hour",
-            lambda s: ""
-            if s == "0" and self.cron_sec == ""
-            else "at {0} minutes past the hour",
+            lambda s: ("" if s == "0" and self.cron_sec == "" else "at {0} minutes past the hour"),
             lambda s: ", {0} through {1}",
         )
 
@@ -222,17 +216,16 @@ class ExpressionDescriptor:
         def get_day_name(s):
             try:
                 return calendar.day_name[int(s)]
-            except:
-                pass
-            try:
-                return calendar.day_name[list(calendar.day_abbr).index(s.title())]
-            except:
-                return s
+            except Exception:
+                try:
+                    return calendar.day_name[list(calendar.day_abbr).index(s.title())]
+                except Exception:
+                    return s
 
         return self.get_segment_description(
             self.cron_week_day,
             ", every day",
-            lambda s: get_day_name(s),
+            get_day_name,
             lambda s: f", every {s} days of the week",
             lambda s: ", {0} through {1}",
             lambda s: ", only on {0}",
@@ -267,17 +260,16 @@ class ExpressionDescriptor:
         def get_month_name(s):
             try:
                 return calendar.month_name[int(s)]
-            except:
-                pass
-            try:
-                return calendar.month_name[list(calendar.month_abbr).index(s.title())]
-            except:
-                return s
+            except Exception:
+                try:
+                    return calendar.month_name[list(calendar.month_abbr).index(s.title())]
+                except Exception:
+                    return s
 
         return self.get_segment_description(
             self.cron_month,
             "",
-            lambda s: get_month_name(s),
+            get_month_name,
             lambda s: f", every {s} months",
             lambda s: ", {0} through {1}",
             lambda s: ", only in {0}",
@@ -314,7 +306,7 @@ class ExpressionDescriptor:
             description = self.get_segment_description(
                 exp,
                 ", every day" if self.cron_week_day == "*" else "",
-                lambda s: _add_suffix(s),
+                _add_suffix,
                 lambda s: ", every day" if s == "1" else ", every {0}",
                 lambda s: ", between {0} and {1} day of the month",
                 lambda s: " on the {0} of the month",
@@ -366,83 +358,68 @@ class ExpressionDescriptor:
 
         description = None
         expression = expression.strip()
-        if expression is None or expression == "":
-            description = ""
-        elif expression == "*":
-            description = all_description
-        elif not any(ext in expression for ext in ["/", "-", ",", " "]):
-            description = get_description_format(expression).format(
-                get_single_item_description(expression)
-            )
-        elif "," in expression:
-            segments = expression.split(",")
-            description_content = ""
-            for i, seg in enumerate(segments):
-                seg = seg.strip()
-                if i > 0 and len(segments) > 2:
-                    description_content += ", "
+        if not expression or expression == "":
+            return
 
-                    if i < len(segments) - 1:
-                        description_content += " "
-
-                if (
-                    i > 0
-                    and len(segments) > 1
-                    and (i == len(segments) - 1 or len(segments) == 2)
-                ):
-                    description_content += " and "
-                description_content += self.get_segment_description(
-                    seg,
-                    all_description,
-                    get_single_item_description,
-                    get_interval_description_format,
-                    get_between_description_format,
-                    get_single_item_description,
-                    get_range_format,
-                )
-                # replace weirdness
-                description_content = description_content.replace("and ,", "and")
-                description_content = description_content.replace("of the month", "")
-
-            description = get_description_format(expression).format(description_content)
-        elif " " in expression and not any(
-            ext in expression for ext in ["/", "-", ","]
-        ):
-            daypart = expression.split()
-            if len(daypart) > 1 and daypart[1].lower() in map(
-                str.lower, calendar.day_abbr
-            ):
-                expression = f"{daypart[0]} {calendar.day_name[self._cron_days[daypart[1].upper()]]}"
-            description = get_description_format(expression).format(
-                get_single_item_description(expression)
-            )
-        elif "/" in expression:
+        if expression == "*":
+            return all_description
+        if "/" in expression:
             segments = expression.split("/")
-            description = get_interval_description_format(segments[1]).format(
+            interval_description = get_interval_description_format(segments[1]).format(
                 get_single_item_description(segments[1])
             )
 
-            # interval contains 'between' piece (i.e. 2-59/3 )
             if "-" in segments[0]:
                 between_segment_description = self.generate_between_segment_description(
                     segments[0],
                     get_between_description_format,
                     get_single_item_description,
                 )
-                if not between_segment_description.startswith(", "):
-                    description += ", "
 
-                description += between_segment_description
+                description = f"{interval_description}, {between_segment_description}"
             elif not any(ext in segments[0] for ext in ["*", ","]):
-                range_item_description = get_description_format(segments[0]).format(
-                    get_single_item_description(segments[0])
+                range_item_description = (
+                    get_description_format(segments[0])
+                    .format(get_single_item_description(segments[0]))
+                    .replace(", ", "")
                 )
-                range_item_description = range_item_description.replace(", ", "")
 
-                description += f", starting {range_item_description}"
+                description = f"{interval_description}, starting {range_item_description}"
         elif "-" in expression:
             description = self.generate_between_segment_description(
                 expression, get_between_description_format, get_single_item_description
+            )
+        elif "," in expression:
+            segments = expression.split(",")
+            description_content = ", ".join(
+                self.get_segment_description(
+                    seg.strip(),
+                    all_description,
+                    get_single_item_description,
+                    get_interval_description_format,
+                    get_between_description_format,
+                    get_description_format,
+                    get_range_format,
+                )
+                for seg in segments
+            )
+
+            # Replace consecutive 'and ,' with 'and'
+            description = description_content.replace("and ,", "and")
+            description = description.replace("of the month", "")
+        elif " " in expression and not any(ext in expression for ext in ["/", "-", ","]):
+            daypart = expression.split()
+            if len(daypart) > 1 and daypart[1].lower() in map(str.lower, calendar.day_abbr):
+                expression = (
+                    f"{daypart[0]} {calendar.day_name[self._cron_days[daypart[1].upper()]]}"
+                )
+
+            description = get_description_format(expression).format(
+                get_single_item_description(expression)
+            )
+        else:
+            description = get_description_format(expression).format(
+                get_single_item_description(expression)
             )
 
         return description
@@ -464,9 +441,7 @@ class ExpressionDescriptor:
         between_segments = between_expression.split("-")
         between_segment_1_description = get_single_item_description(between_segments[0])
         between_segment_2_description = get_single_item_description(between_segments[1])
-        between_segment_2_description = between_segment_2_description.replace(
-            ":00", ":59"
-        )
+        between_segment_2_description = between_segment_2_description.replace(":00", ":59")
 
         between_description_format = get_between_description_format(between_expression)
         description += between_description_format.format(

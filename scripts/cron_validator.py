@@ -41,17 +41,11 @@ class CronValidator:
         self._month(expr=self.cron_month, prefix="Month")
         self._day_of_month(expr=self.cron_day, prefix="Day")
         self._day_of_week(expr=self.cron_week_day, prefix="Week Day")
-        self._number_validate(
-            expr=self.cron_year, prefix="Year", mi=1970, mx=2099, limit=84
-        )
+        self._number_validate(expr=self.cron_year, prefix="Year", mi=1970, mx=2099, limit=84)
         self._number_validate(expr=self.cron_week, prefix="Week", mi=1, mx=53, limit=53)
         self._number_validate(expr=self.cron_hour, prefix="Hour", mi=0, mx=23, limit=24)
-        self._number_validate(
-            expr=self.cron_min, prefix="Minute", mi=0, mx=59, limit=60
-        )
-        self._number_validate(
-            expr=self.cron_sec, prefix="Second", mi=0, mx=59, limit=60
-        )
+        self._number_validate(expr=self.cron_min, prefix="Minute", mi=0, mx=59, limit=60)
+        self._number_validate(expr=self.cron_sec, prefix="Second", mi=0, mx=59, limit=60)
 
     def _number_validate(self, expr: str, prefix: str, mi: int, mx: int, limit: int):
         """validates any records that are number only
@@ -79,21 +73,19 @@ class CronValidator:
         elif re.match(r"^\d*/\d*$", expr):
             parts = expr.split("/")
             self.check_range(expr=parts[0], mi=mi, mx=mx, prefix=prefix)
-            self.check_range(type="interval", expr=parts[1], mi=1, mx=mx, prefix=prefix)
+            self.check_range(ty="interval", expr=parts[1], mi=1, mx=mx, prefix=prefix)
 
         elif re.match(r"^\d*-\d*/\d*$", expr):
             parts = expr.split("/")
             fst_parts = parts[0].split("-")
             self.check_range(expr=fst_parts[0], mi=mi, mx=mx, prefix=prefix)
             self.check_range(expr=fst_parts[1], mi=mi, mx=mx, prefix=prefix)
-            self.compare_range(
-                st=fst_parts[0], ed=fst_parts[1], mi=mi, mx=mx, prefix=prefix
-            )
-            self.check_range(type="interval", expr=parts[1], mi=1, mx=mx, prefix=prefix)
+            self.compare_range(st=fst_parts[0], ed=fst_parts[1], mi=mi, mx=mx, prefix=prefix)
+            self.check_range(ty="interval", expr=parts[1], mi=1, mx=mx, prefix=prefix)
 
         elif re.match(r"^\*/\d*$", expr):
             parts = expr.split("/")
-            self.check_range(type="interval", expr=parts[1], mi=1, mx=mx, prefix=prefix)
+            self.check_range(ty="interval", expr=parts[1], mi=1, mx=mx, prefix=prefix)
 
         elif "," in expr:
             expr_ls = expr.split(",")
@@ -102,9 +94,7 @@ class CronValidator:
                 raise ValueError(msg)
             else:
                 for n in expr_ls:
-                    self._number_validate(
-                        expr=n.strip(), prefix=prefix, mi=mi, mx=mx, limit=limit
-                    )
+                    self._number_validate(expr=n.strip(), prefix=prefix, mi=mi, mx=mx, limit=limit)
         else:
             msg = f"({prefix}) Illegal Expression Format '{expr}'"
             raise ValueError(msg)
@@ -148,15 +138,15 @@ class CronValidator:
             parts = expr.split()
             parts[0] = re.sub("[nd|st|rd|th]", "", parts[0])
             try:
-                st_day = self._cron_days[parts[1].upper()]
+                self._cron_days[parts[1].upper()]
             except KeyError:
                 msg = f"({prefix}) Invalid value '{expr}'"
                 raise ValueError(msg)
-            self.check_range(expr=parts[0], mi=mi, mx=5, prefix=prefix, type=None)
+            self.check_range(expr=parts[0], mi=mi, mx=5, prefix=prefix, ty=None)
         elif re.match(r"^last\s\D{3}$", expr, re.IGNORECASE):
             parts = expr.split()
             try:
-                st_day = self._cron_days[parts[1].upper()]
+                self._cron_days[parts[1].upper()]
             except KeyError:
                 msg = f"({prefix}) Invalid value '{expr}'"
                 raise ValueError(msg)
@@ -182,9 +172,7 @@ class CronValidator:
         elif "*" == expr:
             pass
         elif "," in expr:
-            """
-            get values with a comma and then run each part through months again.
-            """
+            # get values with a comma and then run each part through months again.
             limit = 12
             expr_ls = expr.split(",")
             if len(expr_ls) > limit:
@@ -252,9 +240,7 @@ class CronValidator:
                 for day in expr_ls:
                     self._day_of_week(expr=day.strip(), prefix=prefix)
         # if it is number only then just use _number_validate function
-        elif re.match(
-            r"^(\*|(\d{1})-(\d{1})(/(\d{1}))?|\*/\d{1}|\d{1}(/\d{1})?)$", expr
-        ):
+        elif re.match(r"^(\*|(\d{1})-(\d{1})(/(\d{1}))?|\*/\d{1}|\d{1}(/\d{1})?)$", expr):
             self._number_validate(expr=expr, prefix=prefix, mi=mi, mx=mx, limit=7)
         elif expr.upper() in self._cron_days.keys():
             pass
@@ -266,37 +252,31 @@ class CronValidator:
             except KeyError:
                 msg = f"({prefix}) Invalid value '{expr}'"
                 raise ValueError(msg)
-            self.compare_range(
-                st=st_day, ed=ed_day, mi=mi, mx=mx, prefix=prefix, type="dow"
-            )
+            self.compare_range(st=st_day, ed=ed_day, mi=mi, mx=mx, prefix=prefix, ty="dow")
         else:
             msg = f"({prefix}) Illegal Expression Format '{expr}'"
             raise ValueError(msg)
 
-    def check_range(self, expr: str, mi: str, mx: str, prefix: str, type: str = None):
+    def check_range(self, expr, mi, mx, prefix, ty=None):
         """
         check if expression value within range of specified limit
         """
         if int(expr) < mi or mx < int(expr):
-            if type is None:
+            if ty is None:
                 msg = f"{prefix} values must be between {mi} and {mx} but '{expr}' is provided"
-            elif type == "interval":
+            elif ty == "interval":
                 msg = f"({prefix}) Accepted increment value range is {mi}~{mx} but '{expr}' is provided"
-            elif type == "dow":
+            elif ty == "dow":
                 msg = f"({prefix}) Accepted week value is {mi}~{mx} but '{expr}' is provided"
             raise ValueError(msg)
 
-    def compare_range(
-        self, prefix: str, st: str, ed: str, mi: str, mx: str, type: str = None
-    ):
+    def compare_range(self, prefix, st, ed, mi, mx, ty=None):
         """check 2 expression values size
         does not allow {st} value to be greater than {ed} value
         """
         if int(st) > int(ed):
-            if type is None:
-                msg = (
-                    f"({prefix}) Invalid range '{st}-{ed}'. Accepted range is {mi}-{mx}"
-                )
-            elif type == "dow":
+            if ty is None:
+                msg = f"({prefix}) Invalid range '{st}-{ed}'. Accepted range is {mi}-{mx}"
+            elif ty == "dow":
                 msg = f"({prefix}) Invalid range '{self._cron_days[st]}-{self._cron_days[ed]}'. Accepted range is {mi}-{mx}"
             raise ValueError(msg)
