@@ -161,24 +161,28 @@ def edit_project(project_id: int) -> Response:
     cron_hour = form.get("project_cron_hour", None, type=str)
     cron_min = form.get("project_cron_min", None, type=str)
     cron_sec = form.get("project_cron_sec", None, type=str)
-    try:
-        CronValidator(
-            cron=cron,
-            cron_year=cron_year,
-            cron_month=cron_month,
-            cron_week=cron_week,
-            cron_day=cron_day,
-            cron_week_day=cron_week_day,
-            cron_hour=cron_hour,
-            cron_min=cron_min,
-            cron_sec=cron_sec,
-        ).validate()
+    if cron == 1:
+        try:
+            CronValidator(
+                cron=cron,
+                cron_year=cron_year,
+                cron_month=cron_month,
+                cron_week=cron_week,
+                cron_day=cron_day,
+                cron_week_day=cron_week_day,
+                cron_hour=cron_hour,
+                cron_min=cron_min,
+                cron_sec=cron_sec,
+            ).validate()
 
-    except ValueError as e:
-        error = str(e)
-        return render_template(
-            "pages/project/new.html.j2", p=me2, title="Editing " + me2.name, error=error
-        )
+        except ValueError as e:
+            error = str(e)
+            return render_template(
+                "pages/project/new.html.j2",
+                p=me2,
+                title="Editing " + me2.name,
+                error=error,
+            )
     # pylint: disable=R1735
     me.update(
         dict(  # noqa: C408
@@ -277,27 +281,28 @@ def new_project() -> Response:
     cron_min = form.get("project_cron_min", None, type=str)
     cron_sec = form.get("project_cron_sec", None, type=str)
 
-    try:
-        CronValidator(
-            cron=cron,
-            cron_year=cron_year,
-            cron_month=cron_month,
-            cron_week=cron_week,
-            cron_day=cron_day,
-            cron_week_day=cron_week_day,
-            cron_hour=cron_hour,
-            cron_min=cron_min,
-            cron_sec=cron_sec,
-        ).validate()
+    if cron == 1:
+        try:
+            CronValidator(
+                cron=cron,
+                cron_year=cron_year,
+                cron_month=cron_month,
+                cron_week=cron_week,
+                cron_day=cron_day,
+                cron_week_day=cron_week_day,
+                cron_hour=cron_hour,
+                cron_min=cron_min,
+                cron_sec=cron_sec,
+            ).validate()
 
-    except ValueError as e:
-        error = str(e)
-        return render_template(
-            "pages/project/new.html.j2",
-            p=Project.query.filter_by(id=0).first(),
-            title="New Project",
-            error=error,
-        )
+        except ValueError as e:
+            error = str(e)
+            return render_template(
+                "pages/project/new.html.j2",
+                p=Project.query.filter_by(id=0).first(),
+                title="New Project",
+                error=error,
+            )
 
     # create project
     me = Project(

@@ -25,33 +25,36 @@ class CronValidator:
         cron_min,
         cron_sec,
     ) -> None:
-        if not cron:
-            pass
-        else:
-            self.cron_year = cron_year
-            self.cron_month = cron_month
-            self.cron_week = cron_week
-            self.cron_day = cron_day
-            self.cron_week_day = cron_week_day
-            self.cron_hour = cron_hour
-            self.cron_min = cron_min
-            self.cron_sec = cron_sec
+        self.cron = cron
+        self.cron_year = cron_year
+        self.cron_month = cron_month
+        self.cron_week = cron_week
+        self.cron_day = cron_day
+        self.cron_week_day = cron_week_day
+        self.cron_hour = cron_hour
+        self.cron_min = cron_min
+        self.cron_sec = cron_sec
 
     def validate(self):
-        self._month(expr=self.cron_month, prefix="Month")
-        self._day_of_month(expr=self.cron_day, prefix="Day")
-        self._day_of_week(expr=self.cron_week_day, prefix="Week Day")
-        self._number_validate(
-            expr=self.cron_year, prefix="Year", mi=1970, mx=2099, limit=84
-        )
-        self._number_validate(expr=self.cron_week, prefix="Week", mi=1, mx=53, limit=53)
-        self._number_validate(expr=self.cron_hour, prefix="Hour", mi=0, mx=23, limit=24)
-        self._number_validate(
-            expr=self.cron_min, prefix="Minute", mi=0, mx=59, limit=60
-        )
-        self._number_validate(
-            expr=self.cron_sec, prefix="Second", mi=0, mx=59, limit=60
-        )
+        if self.cron == 1:
+            self._month(expr=self.cron_month, prefix="Month")
+            self._day_of_month(expr=self.cron_day, prefix="Day")
+            self._day_of_week(expr=self.cron_week_day, prefix="Week Day")
+            self._number_validate(
+                expr=self.cron_year, prefix="Year", mi=1970, mx=2099, limit=84
+            )
+            self._number_validate(
+                expr=self.cron_week, prefix="Week", mi=1, mx=53, limit=53
+            )
+            self._number_validate(
+                expr=self.cron_hour, prefix="Hour", mi=0, mx=23, limit=24
+            )
+            self._number_validate(
+                expr=self.cron_min, prefix="Minute", mi=0, mx=59, limit=60
+            )
+            self._number_validate(
+                expr=self.cron_sec, prefix="Second", mi=0, mx=59, limit=60
+            )
 
     def _number_validate(self, expr: str, prefix: str, mi: int, mx: int, limit: int):
         """validates any records that are number only
