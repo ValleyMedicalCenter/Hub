@@ -25,8 +25,8 @@
     "gulp-replace": "1.1.4",
     "gulp-sass": "5.1.0",
     "npm-run-all": "^4.1.5",
-    "rollup": "^4.12.0",
-    "sass": "^1.71.1",
+    "rollup": "^4.13.0",
+    "sass": "^1.72.0",
     "uglify-js": "^3.17.4"
   },
   "description": "A task scheduling tool.",
@@ -48,7 +48,7 @@
     "gulp-rename": "2.0.0",
     "gulp-uglify": "3.0.2",
     "prettier": "^3.2.5",
-    "semantic-release": "^23.0.2"
+    "semantic-release": "^23.0.4"
   },
   "homepage": "https://atlas-hub.atlas.bi",
   "license": "AGPL-3.0-or-later",
