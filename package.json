@@ -5,7 +5,7 @@
     }
   },
   "dependencies": {
-    "@babel/preset-env": "^7.24.0",
+    "@babel/preset-env": "^7.24.4",
     "@fontsource/inter": "5.0.17",
     "@fontsource/rasa": "5.0.19",
     "@hotwired/turbo": "^8.0.3",
@@ -25,8 +25,8 @@
     "gulp-replace": "1.1.4",
     "gulp-sass": "5.1.0",
     "npm-run-all": "^4.1.5",
-    "rollup": "^4.13.0",
-    "sass": "^1.72.0",
+    "rollup": "^4.15.0",
+    "sass": "^1.75.0",
     "uglify-js": "^3.17.4"
   },
   "description": "A task scheduling tool.",
@@ -37,7 +37,7 @@
     "@semantic-release/exec": "6.0.3",
     "@semantic-release/git": "10.0.1",
     "@semantic-release/github": "^9.2.6",
-    "@semantic-release/npm": "^11.0.03",
+    "@semantic-release/npm": "^11.0.3",
     "@semantic-release/release-notes-generator": "^12.1.0",
     "browser-sync": "^3.0.2",
     "cz-conventional-changelog": "3.3.0",
@@ -48,7 +48,7 @@
     "gulp-rename": "2.0.0",
     "gulp-uglify": "3.0.2",
     "prettier": "^3.2.5",
-    "semantic-release": "^23.0.4"
+    "semantic-release": "^23.0.8"
   },
   "homepage": "https://atlas-hub.atlas.bi",
   "license": "AGPL-3.0-or-later",
