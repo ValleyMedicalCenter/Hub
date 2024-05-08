@@ -1,3 +1,5 @@
+"""Initial creation and seed of the database."""
+
 from typing import Any
 
 from sqlalchemy.orm import Session as SqlSession
