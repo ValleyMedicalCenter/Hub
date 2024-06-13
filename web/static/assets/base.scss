@@ -1,5 +1,7 @@
 @use '../../../node_modules/@fontsource/inter/scss/mixins' as Inter;
 @use '../../../node_modules/@fontsource/rasa/scss/mixins' as Rasa;
+@use '../../../node_modules/bulma/sass/utilities/initial-variables' as iv;
+@use '../../../node_modules/bulma/sass/utilities/derived-variables' as dv;
 
 @include Inter.faces(
   $family: 'Inter',
@@ -40,11 +42,13 @@ $family-sans-serif:
   'Segoe UI Emoji',
   'Segoe UI Symbol';
 
-@import '../../../node_modules/bulma-checkradio/src/sass';
-@import '../../../node_modules/bulma/bulma';
 
-@import '../../../node_modules/bulma-switch/src/sass';
-@import '../../../node_modules/bulma-tooltip/src/sass';
+
+//@import '../../../node_modules/bulma-checkradio/src/sass';
+//@import '../../../node_modules/bulma/bulma';
+
+//@import '../../../node_modules/bulma-switch/src/sass';
+//@import '../../../node_modules/bulma-tooltip/src/sass';
 
 /* purgecss start ignore */
 @import '../fonts/fontawesome/stylesheet';
@@ -78,25 +82,25 @@ $family-sans-serif:
   }
   a.navbar-item {
     &:hover {
-      color: $grey-darker;
+      color: iv.$grey-darker;
     }
   }
   .has-dropdown {
     .navbar-link {
       &:hover {
-        color: $grey-darker;
+        color: iv.$grey-darker;
       }
     }
   }
 }
 
-@media screen and (min-width: $desktop) {
+@media screen and (min-width: iv.$desktop) {
   .atlas-navbar .navbar-start {
     padding-top: 0 !important;
   }
 }
 
-@media screen and (min-width: $desktop) {
+@media screen and (min-width: iv.$desktop) {
   .hide-desktop {
     display: none !important;
   }
@@ -115,13 +119,13 @@ $family-sans-serif:
   min-width: max(50vw, 100%);
   max-width: 800px;
   display: none;
-  border-radius: $radius;
+  border-radius: iv.$radius;
   z-index: 999999;
   max-height: calc(100vh - 145px);
   overflow-y: auto;
 }
 
-@media screen and (min-width: $desktop) {
+@media screen and (min-width: iv.$desktop) {
   #search-results {
     min-width: max(30vw, 100%);
   }
@@ -134,8 +138,8 @@ $family-sans-serif:
 #search-results:active,
 #search-results.search-focus {
   display: block;
-  box-shadow: $shadow;
-  border: 1px solid $border;
+  box-shadow: dv.$shadow-color;
+  border: 1px solid dv.$border;
 }
 
 #search-results .panel-block:first-of-type {
@@ -162,8 +166,8 @@ $family-sans-serif:
 }
 
 #search-results em {
-  background-color: $info-light;
-  color: $info;
+  background-color: hsl(198, 100%, 86%);
+  color: iv.$cyan;
 }
 
 /*** tabs ***/
@@ -278,7 +282,7 @@ input.transparent {
     content: attr(data-attr);
     position: absolute;
     bottom: -30px;
-    background: $white;
+    background: iv.$white;
     right: 0;
     left: 0;
   }
@@ -286,7 +290,7 @@ input.transparent {
 .em-ScaleBar {
   height: 1px;
   width: 100%;
-  background: $grey-light;
+  background: iv.$grey-light;
   position: relative;
   margin-bottom: 50px;
   &::before {
@@ -294,9 +298,9 @@ input.transparent {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    background: $white;
+    background: iv.$white;
     padding-right: 10px;
-    color: $grey-dark;
+    color: iv.$grey-dark;
   }
   &:last-of-type {
     background: transparent;
