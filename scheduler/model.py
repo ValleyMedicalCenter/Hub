@@ -57,7 +57,7 @@ class Login(db.Model):
 
     id: Mapped[int] = mapped_column(db.Integer, primary_key=True, index=True)
     type_id: Mapped[Optional[int]] = mapped_column(
-        db.Integer, db.ForeignKey("LoginType.id"), nullable=True
+        db.Integer, db.ForeignKey(LoginType.id), nullable=True
     )
     username: Mapped[Optional[str]] = mapped_column(db.String(120), nullable=True)
     login_date: Mapped[Optional[datetime.datetime]] = mapped_column(
