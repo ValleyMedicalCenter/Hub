@@ -185,7 +185,7 @@ class Smb:
             new_path = str(Path(directory).joinpath(dirname))
             yield from self._walk(new_path)
 
-    def __load_file(self, file_name: str, index: int, length: int) -> IO[str]:
+    def __load_file(self, file_name: str, index: int, length: int) -> IO[bytes]:
         RunnerLog(self.task, self.run_id, 10, f"({index} of {length}) downloading {file_name}")
 
         director = urllib.request.build_opener(SMBHandler)
@@ -233,7 +233,7 @@ class Smb:
 
         return data_file
 
-    def read(self, file_name: str) -> List[IO[str]]:
+    def read(self, file_name: str) -> List[IO[bytes]]:
         """Read file contents of network file path.
 
         Data is loaded into a temp file.

@@ -15,6 +15,7 @@ from flask import current_app as app
 from flask import jsonify
 from flask_login import current_user, login_required
 from sqlalchemy import and_, or_
+from werkzeug.wrappers import Response
 
 from web import db, executor, redis_client
 from web.model import Project, Task, TaskLog
@@ -27,7 +28,7 @@ executors_bp = Blueprint("executors_bp", __name__)
 
 @executors_bp.route("/executor/status")
 @login_required
-def executor_status() -> dict:
+def executor_status() -> Response:
     """Get list of active executor jobs."""
     active_executors = json.loads(
         redis_client.get(f"atlas_hub_executors-{current_user.id}") or json.dumps({})

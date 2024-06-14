@@ -32,7 +32,7 @@ dashboard_bp = Blueprint("dashboard_bp", __name__)
 
 @dashboard_bp.route("/search")
 @login_required
-def search() -> dict:
+def search() -> Response:
     """Search data."""
     my_json = {}
 

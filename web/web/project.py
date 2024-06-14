@@ -138,7 +138,7 @@ def edit_project_form(project_id: int) -> Union[str, Response]:
 
 @project_bp.route("/project/<project_id>/edit", methods=["POST"])
 @login_required
-def edit_project(project_id: int) -> Response:
+def edit_project(project_id: int) -> Union[str, Response]:
     """Save project edits."""
     cache.clear()
     error = None
@@ -258,7 +258,7 @@ def new_project_form() -> str:
 
 @project_bp.route("/project/new", methods=["POST"])
 @login_required
-def new_project() -> Response:
+def new_project() -> Union[str, Response]:
     """Save a new project."""
     cache.clear()
     error = None

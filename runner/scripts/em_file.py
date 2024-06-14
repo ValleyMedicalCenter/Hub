@@ -59,7 +59,7 @@ class File:
     # pylint: disable=too-few-public-methods
     # pylint: disable=too-many-instance-attributes
     def __init__(
-        self, task: Task, run_id: Optional[str], data_file: IO[str], params: ParamLoader
+        self, task: Task, run_id: Optional[str], data_file: IO[bytes], params: ParamLoader
     ) -> None:
         """Set up class parameters."""
         self.task = task
