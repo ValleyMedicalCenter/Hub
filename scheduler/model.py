@@ -22,7 +22,7 @@ migrations file - so flask-migrations think it has already applied the migration
 
 import datetime
 from dataclasses import dataclass
-from typing import Optional
+from typing import List, Optional
 
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
@@ -150,7 +150,7 @@ class Project(db.Model):
 
     sequence_tasks: Mapped[Optional[int]] = mapped_column(db.Integer, nullable=True)
 
-    task: Mapped["Task"] = relationship(
+    task: Mapped[List["Task"]] = relationship(
         backref="project",
         lazy="dynamic",
         cascade="all, delete, delete-orphan",
@@ -227,13 +227,13 @@ class TaskStatus(db.Model):
 
     id: Mapped[int] = mapped_column(db.Integer, primary_key=True)
     name: Mapped[Optional[str]] = mapped_column(db.String(1000), nullable=True)
-    task: Mapped["Task"] = relationship(
+    task: Mapped[List["Task"]] = relationship(
         backref="status",
         lazy="dynamic",
         cascade="all, delete, delete-orphan",
         passive_deletes=True,
     )
-    task_log: Mapped["TaskLog"] = relationship(
+    task_log: Mapped[List["TaskLog"]] = relationship(
         backref="status",
         lazy="dynamic",
         cascade="all, delete, delete-orphan",
