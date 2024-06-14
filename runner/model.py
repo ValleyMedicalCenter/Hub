@@ -44,7 +44,9 @@ class LoginType(db.Model):
 
     id: Mapped[int] = mapped_column(db.Integer, primary_key=True, index=True)
     name: Mapped[Optional[str]] = mapped_column(db.String(120), nullable=True)
-    login: Mapped["Login"] = relationship("Login", back_populates="login_type", lazy=True)
+    login: Mapped["Login"] = relationship(
+        backref="login_type", lazy=True, foreign_keys="Login.type_id"
+    )
 
 
 @dataclass
@@ -75,23 +77,23 @@ class User(db.Model):
     full_name: Mapped[Optional[str]] = mapped_column(db.String(200), nullable=True)
     first_name: Mapped[Optional[str]] = mapped_column(db.String(200), nullable=True)
     project_owner: Mapped["Project"] = relationship(
-        back_populates="project_owner", lazy=True, foreign_keys="Project.owner_id"
+        backref="project_owner", lazy=True, foreign_keys="Project.owner_id"
     )
     project_creator: Mapped["Project"] = relationship(
-        back_populates="project_creator",
+        backref="project_creator",
         lazy=True,
         foreign_keys="Project.creator_id",
     )
     project_updater: Mapped["Project"] = relationship(
-        back_populates="project_updater",
+        backref="project_updater",
         lazy=True,
         foreign_keys="Project.updater_id",
     )
     task_creator: Mapped["Task"] = relationship(
-        back_populates="task_creator", lazy=True, foreign_keys="Task.creator_id"
+        backref="task_creator", lazy=True, foreign_keys="Task.creator_id"
     )
     task_updater: Mapped["Task"] = relationship(
-        back_populates="task_updater", lazy=True, foreign_keys="Task.updater_id"
+        backref="task_updater", lazy=True, foreign_keys="Task.updater_id"
     )
     is_authenticated = True
     is_active = True
@@ -149,7 +151,7 @@ class Project(db.Model):
     sequence_tasks: Mapped[Optional[int]] = mapped_column(db.Integer, nullable=True)
 
     task: Mapped["Task"] = relationship(
-        back_populates="project",
+        backref="project",
         lazy="dynamic",
         cascade="all, delete, delete-orphan",
         passive_deletes=True,
@@ -157,7 +159,7 @@ class Project(db.Model):
 
     # projectparams link
     params: Mapped["ProjectParam"] = relationship(
-        back_populates="project",
+        backref="project",
         lazy=True,
         cascade="all, delete, delete-orphan",
         passive_deletes=True,
@@ -189,7 +191,7 @@ class TaskSourceType(db.Model):
 
     id: Mapped[int] = mapped_column(db.Integer, primary_key=True)
     name: Mapped[Optional[str]] = mapped_column(db.String(120), nullable=True)
-    task: Mapped["Task"] = relationship(back_populates="source_type", lazy=True)
+    task: Mapped["Task"] = relationship(backref="source_type", lazy=True)
 
 
 @dataclass
@@ -200,7 +202,7 @@ class TaskSourceQueryType(db.Model):
 
     id: Mapped[int] = mapped_column(db.Integer, primary_key=True)
     name: Mapped[Optional[str]] = mapped_column(db.String(120), nullable=True)
-    task: Mapped["Task"] = relationship(back_populates="query_type", lazy=True)
+    task: Mapped["Task"] = relationship(backref="query_type", lazy=True)
 
 
 @dataclass
@@ -211,7 +213,7 @@ class TaskProcessingType(db.Model):
 
     id: Mapped[int] = mapped_column(db.Integer, primary_key=True)
     name: Mapped[Optional[str]] = mapped_column(db.String(120), nullable=True)
-    task: Mapped["Task"] = relationship(back_populates="processing_type", lazy=True)
+    task: Mapped["Task"] = relationship(backref="processing_type", lazy=True)
 
 
 @dataclass
@@ -226,13 +228,13 @@ class TaskStatus(db.Model):
     id: Mapped[int] = mapped_column(db.Integer, primary_key=True)
     name: Mapped[Optional[str]] = mapped_column(db.String(1000), nullable=True)
     task: Mapped["Task"] = relationship(
-        back_populates="status",
+        backref="status",
         lazy="dynamic",
         cascade="all, delete, delete-orphan",
         passive_deletes=True,
     )
     task_log: Mapped["TaskLog"] = relationship(
-        back_populates="status",
+        backref="status",
         lazy="dynamic",
         cascade="all, delete, delete-orphan",
         passive_deletes=True,
@@ -255,32 +257,32 @@ class Connection(db.Model):
     primary_contact_email: Mapped[Optional[str]] = mapped_column(db.String(120), nullable=True)
     primary_contact_phone: Mapped[Optional[str]] = mapped_column(db.String(120), nullable=True)
     ssh: Mapped["ConnectionSsh"] = relationship(
-        back_populates="connection",
+        backref="connection",
         lazy=True,
         foreign_keys="ConnectionSsh.connection_id",
     )
     sftp: Mapped["ConnectionSftp"] = relationship(
-        back_populates="connection",
+        backref="connection",
         lazy=True,
         foreign_keys="ConnectionSftp.connection_id",
     )
     ftp: Mapped["ConnectionFtp"] = relationship(
-        back_populates="connection",
+        backref="connection",
         lazy=True,
         foreign_keys="ConnectionFtp.connection_id",
     )
     smb: Mapped["ConnectionSmb"] = relationship(
-        back_populates="connection",
+        backref="connection",
         lazy=True,
         foreign_keys="ConnectionSmb.connection_id",
     )
     database: Mapped["ConnectionDatabase"] = relationship(
-        back_populates="connection",
+        backref="connection",
         lazy=True,
         foreign_keys="ConnectionDatabase.connection_id",
     )
     gpg: Mapped["ConnectionGpg"] = relationship(
-        back_populates="connection",
+        backref="connection",
         lazy=True,
         foreign_keys="ConnectionGpg.connection_id",
     )
@@ -311,20 +313,20 @@ class ConnectionSftp(db.Model):
     password: Mapped[Optional[str]] = mapped_column(db.Text, nullable=True)
     key_password: Mapped[Optional[str]] = mapped_column(db.Text, nullable=True)
     task: Mapped["Task"] = relationship(
-        back_populates="destination_sftp_conn",
+        backref="destination_sftp_conn",
         lazy=True,
         foreign_keys="Task.destination_sftp_id",
     )
     task_source: Mapped["Task"] = relationship(
-        back_populates="source_sftp_conn",
+        backref="source_sftp_conn",
         lazy=True,
         foreign_keys="Task.source_sftp_id",
     )
     query_source: Mapped["Task"] = relationship(
-        back_populates="query_sftp_conn", lazy=True, foreign_keys="Task.query_sftp_id"
+        backref="query_sftp_conn", lazy=True, foreign_keys="Task.query_sftp_id"
     )
     processing_source: Mapped["Task"] = relationship(
-        back_populates="processing_sftp_conn",
+        backref="processing_sftp_conn",
         lazy=True,
         foreign_keys="Task.processing_sftp_id",
     )
@@ -352,7 +354,7 @@ class ConnectionSsh(db.Model):
     username: Mapped[Optional[str]] = mapped_column(db.String(120), nullable=True)
     password: Mapped[Optional[str]] = mapped_column(db.Text, nullable=True)
     task_source: Mapped["Task"] = relationship(
-        back_populates="source_ssh_conn",
+        backref="source_ssh_conn",
         lazy=True,
         foreign_keys="Task.source_ssh_id",
     )
@@ -377,7 +379,7 @@ class ConnectionGpg(db.Model):
     name: Mapped[Optional[str]] = mapped_column(db.String(500), nullable=True)
     key: Mapped[Optional[str]] = mapped_column(db.String(8000), nullable=True)
     task_source: Mapped["Task"] = relationship(
-        back_populates="file_gpg_conn",
+        backref="file_gpg_conn",
         lazy=True,
         foreign_keys="Task.file_gpg_id",
     )
@@ -405,18 +407,18 @@ class ConnectionFtp(db.Model):
     username: Mapped[Optional[str]] = mapped_column(db.String(500), nullable=True)
     password: Mapped[Optional[str]] = mapped_column(db.Text, nullable=True)
     task: Mapped["Task"] = relationship(
-        back_populates="destination_ftp_conn",
+        backref="destination_ftp_conn",
         lazy=True,
         foreign_keys="Task.destination_ftp_id",
     )
     task_source: Mapped["Task"] = relationship(
-        back_populates="source_ftp_conn", lazy=True, foreign_keys="Task.source_ftp_id"
+        backref="source_ftp_conn", lazy=True, foreign_keys="Task.source_ftp_id"
     )
     query_source: Mapped["Task"] = relationship(
-        back_populates="query_ftp_conn", lazy=True, foreign_keys="Task.query_ftp_id"
+        backref="query_ftp_conn", lazy=True, foreign_keys="Task.query_ftp_id"
     )
     processing_source: Mapped["Task"] = relationship(
-        back_populates="processing_ftp_conn",
+        backref="processing_ftp_conn",
         lazy=True,
         foreign_keys="Task.processing_ftp_id",
     )
@@ -446,18 +448,18 @@ class ConnectionSmb(db.Model):
     server_ip: Mapped[Optional[str]] = mapped_column(db.String(500), nullable=True)
     server_name: Mapped[Optional[str]] = mapped_column(db.String(500), nullable=True)
     task: Mapped["Task"] = relationship(
-        back_populates="destination_smb_conn",
+        backref="destination_smb_conn",
         lazy=True,
         foreign_keys="Task.destination_smb_id",
     )
     task_source: Mapped["Task"] = relationship(
-        back_populates="source_smb_conn", lazy=True, foreign_keys="Task.source_smb_id"
+        backref="source_smb_conn", lazy=True, foreign_keys="Task.source_smb_id"
     )
     query_source: Mapped["Task"] = relationship(
-        back_populates="query_smb_conn", lazy=True, foreign_keys="Task.query_smb_id"
+        backref="query_smb_conn", lazy=True, foreign_keys="Task.query_smb_id"
     )
     processing_source: Mapped["Task"] = relationship(
-        back_populates="processing_smb_conn",
+        backref="processing_smb_conn",
         lazy=True,
         foreign_keys="Task.processing_smb_id",
     )
@@ -475,9 +477,7 @@ class ConnectionDatabaseType(db.Model):
 
     id: Mapped[int] = mapped_column(db.Integer, primary_key=True)
     name: Mapped[Optional[str]] = mapped_column(db.String(120), nullable=True)
-    database: Mapped["ConnectionDatabase"] = relationship(
-        back_populates="database_type", lazy=True
-    )
+    database: Mapped["ConnectionDatabase"] = relationship(backref="database_type", lazy=True)
 
 
 @dataclass
@@ -497,7 +497,7 @@ class ConnectionDatabase(db.Model):
     connection_string: Mapped[Optional[str]] = mapped_column(db.Text, nullable=True)
     timeout: Mapped[Optional[str]] = mapped_column(db.Integer, nullable=True)
     task_source: Mapped["Task"] = relationship(
-        back_populates="source_database_conn",
+        backref="source_database_conn",
         lazy=True,
         foreign_keys="Task.source_database_id",
     )
@@ -516,7 +516,7 @@ class TaskDestinationFileType(db.Model):
     id: Mapped[int] = mapped_column(db.Integer, primary_key=True)
     name: Mapped[Optional[str]] = mapped_column(db.String(120), nullable=True)
     ext: Mapped[Optional[str]] = mapped_column(db.String(120), nullable=False)
-    task: Mapped["Task"] = relationship(back_populates="file_type", lazy=True)
+    task: Mapped["Task"] = relationship(backref="file_type", lazy=True)
 
 
 @dataclass
@@ -527,7 +527,7 @@ class QuoteLevel(db.Model):
 
     id: Mapped[int] = mapped_column(db.Integer, primary_key=True, index=True)
     name: Mapped[Optional[str]] = mapped_column(db.String(120), nullable=True)
-    task: Mapped["Task"] = relationship(back_populates="destination_file_quote_level", lazy=True)
+    task: Mapped["Task"] = relationship(backref="destination_file_quote_level", lazy=True)
 
 
 @dataclass
@@ -780,7 +780,7 @@ class Task(db.Model):
 
     # tasklog link
     task: Mapped["TaskLog"] = relationship(
-        back_populates="task",
+        backref="task",
         lazy=True,
         cascade="all, delete, delete-orphan",
         passive_deletes=True,
@@ -788,7 +788,7 @@ class Task(db.Model):
 
     # taskparams link
     params: Mapped["TaskParam"] = relationship(
-        back_populates="task",
+        backref="task",
         lazy=True,
         cascade="all, delete, delete-orphan",
         passive_deletes=True,
@@ -796,7 +796,7 @@ class Task(db.Model):
 
     # taskfiles link
     files: Mapped["TaskFile"] = relationship(
-        back_populates="task",
+        backref="task",
         lazy=True,
         cascade="all, delete, delete-orphan",
         passive_deletes=True,
