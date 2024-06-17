@@ -70,7 +70,7 @@ class User(db.Model):
     full_name: Mapped[Optional[str]] = mapped_column(db.String(200), nullable=True)
     first_name: Mapped[Optional[str]] = mapped_column(db.String(200), nullable=True)
     project_owner: Mapped["Project"] = relationship(
-        back_populates="project_owner", lazy=True, foreign_keys="Project.owner_id"
+        backref="project_owner", lazy=True, foreign_keys="Project.owner_id"
     )
     project_creator: Mapped["Project"] = relationship(
         backref="project_creator",
@@ -151,7 +151,7 @@ class Project(db.Model):
     )
 
     # projectparams link
-    params: Mapped["ProjectParam"] = relationship(
+    params: Mapped[List["ProjectParam"]] = relationship(
         backref="project",
         lazy=True,
         cascade="all, delete, delete-orphan",
@@ -493,7 +493,7 @@ class ConnectionDatabase(db.Model):
         lazy=True,
         foreign_keys="Task.source_database_id",
     )
-    connection: Mapped["Connection"] = relationship(back_reference="database")
+    connection: Mapped["Connection"] = relationship(back_populates="database")
 
     def __str__(self) -> str:
         """Get string of name."""
@@ -772,7 +772,7 @@ class Task(db.Model):
     est_duration: Mapped[Optional[int]] = mapped_column(db.Integer, nullable=True, index=True)
 
     # tasklog link
-    task: Mapped["TaskLog"] = relationship(
+    task: Mapped[List["TaskLog"]] = relationship(
         backref="task",
         lazy=True,
         cascade="all, delete, delete-orphan",
@@ -780,7 +780,7 @@ class Task(db.Model):
     )
 
     # taskparams link
-    params: Mapped["TaskParam"] = relationship(
+    params: Mapped[List["TaskParam"]] = relationship(
         backref="task",
         lazy=True,
         cascade="all, delete, delete-orphan",
@@ -788,7 +788,7 @@ class Task(db.Model):
     )
 
     # taskfiles link
-    files: Mapped["TaskFile"] = relationship(
+    files: Mapped[List["TaskFile"]] = relationship(
         backref="task",
         lazy=True,
         cascade="all, delete, delete-orphan",
