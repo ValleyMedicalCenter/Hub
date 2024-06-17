@@ -2,15 +2,15 @@
 
 import sys
 import traceback
-from typing import List, Optional, Type
+from typing import Optional, Type
 
 
 def full_stack() -> str:
     """Return full stack trace of an exception."""
     exc_info: Optional[Type[BaseException]] = sys.exc_info()[0]
     if exc_info is not None:
-        frame = exc_info.tb_frame.f_back
-        stack = List(traceback.extract_stack(frame))
+        frame = sys.exc_info()[-1].tb_frame.f_back
+        stack = traceback.extract_stack(frame)
     else:
         stack = traceback.extract_stack()[:-1]  # last one would be full_stack()
     trc = "Traceback (most recent call last):\n"
