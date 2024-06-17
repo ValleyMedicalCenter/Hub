@@ -38,9 +38,7 @@ class LoginType(db.Model):
 
     id: Mapped[int] = mapped_column(db.Integer, primary_key=True, index=True)
     name: Mapped[Optional[str]] = mapped_column(db.String(120), nullable=True)
-    login: Mapped["Login"] = relationship(
-        backref="login_type", lazy=True, foreign_keys="Login.type_id"
-    )
+    login: Mapped[List["Login"]] = relationship(back_populates="login_type", lazy=True)
 
 
 @dataclass
@@ -57,6 +55,7 @@ class Login(db.Model):
     login_date: Mapped[Optional[datetime.datetime]] = mapped_column(
         db.DateTime, server_default=functions.now()
     )
+    login_type: Mapped["LoginType"] = relationship(back_populates="login")
 
 
 @dataclass
@@ -71,7 +70,7 @@ class User(db.Model):
     full_name: Mapped[Optional[str]] = mapped_column(db.String(200), nullable=True)
     first_name: Mapped[Optional[str]] = mapped_column(db.String(200), nullable=True)
     project_owner: Mapped["Project"] = relationship(
-        backref="project_owner", lazy=True, foreign_keys="Project.owner_id"
+        back_populates="project_owner", lazy=True, foreign_keys="Project.owner_id"
     )
     project_creator: Mapped["Project"] = relationship(
         backref="project_creator",
@@ -250,32 +249,31 @@ class Connection(db.Model):
     primary_contact: Mapped[Optional[str]] = mapped_column(db.String(400), nullable=True)
     primary_contact_email: Mapped[Optional[str]] = mapped_column(db.String(120), nullable=True)
     primary_contact_phone: Mapped[Optional[str]] = mapped_column(db.String(120), nullable=True)
-    ssh: Mapped["ConnectionSsh"] = relationship(
+    ssh: Mapped[List["ConnectionSsh"]] = relationship(
         backref="connection",
         lazy=True,
         foreign_keys="ConnectionSsh.connection_id",
     )
-    sftp: Mapped["ConnectionSftp"] = relationship(
+    sftp: Mapped[List["ConnectionSftp"]] = relationship(
         backref="connection",
         lazy=True,
         foreign_keys="ConnectionSftp.connection_id",
     )
-    ftp: Mapped["ConnectionFtp"] = relationship(
+    ftp: Mapped[List["ConnectionFtp"]] = relationship(
         backref="connection",
         lazy=True,
         foreign_keys="ConnectionFtp.connection_id",
     )
-    smb: Mapped["ConnectionSmb"] = relationship(
+    smb: Mapped[List["ConnectionSmb"]] = relationship(
         backref="connection",
         lazy=True,
         foreign_keys="ConnectionSmb.connection_id",
     )
-    database: Mapped["ConnectionDatabase"] = relationship(
-        backref="connection",
+    database: Mapped[List["ConnectionDatabase"]] = relationship(
+        back_populates="connection",
         lazy=True,
-        foreign_keys="ConnectionDatabase.connection_id",
     )
-    gpg: Mapped["ConnectionGpg"] = relationship(
+    gpg: Mapped[List["ConnectionGpg"]] = relationship(
         backref="connection",
         lazy=True,
         foreign_keys="ConnectionGpg.connection_id",
@@ -495,6 +493,7 @@ class ConnectionDatabase(db.Model):
         lazy=True,
         foreign_keys="Task.source_database_id",
     )
+    connection: Mapped["Connection"] = relationship(back_reference="database")
 
     def __str__(self) -> str:
         """Get string of name."""
