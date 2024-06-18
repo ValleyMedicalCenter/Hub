@@ -109,7 +109,7 @@ class Ftp:
             new_path = str(Path(directory).joinpath(dirname))
             yield from self._walk(new_path)
 
-    def __load_file(self, file_name: str) -> IO[bytes]:
+    def __load_file(self, file_name: str) -> IO[str]:
         """Download file from sftp server."""
         my_binary: List[bytes] = []
 
@@ -119,7 +119,7 @@ class Ftp:
         self.conn.retrbinary("RETR " + file_name, callback=handle_binary)
         data = "".join([str(x) for x in my_binary])
 
-        with tempfile.NamedTemporaryFile(mode="wb+", delete=False, dir=self.dir) as data_file:
+        with tempfile.NamedTemporaryFile(mode="w", delete=False, dir=self.dir) as data_file:
             if self.task.source_sftp_ignore_delimiter != 1 and self.task.source_sftp_delimiter:
                 my_delimiter = self.task.source_sftp_delimiter or ","
 
@@ -149,7 +149,7 @@ class Ftp:
 
         return "/" + path
 
-    def read(self, file_name: str) -> List[IO[bytes]]:
+    def read(self, file_name: str) -> List[IO[str]]:
         """Read a file from FTP server.
 
         Data is loaded into a temp file.

@@ -97,7 +97,7 @@ class Runner:
 
         task = Task.query.filter_by(id=task_id).first()
 
-        self.source_files: List[IO[bytes]]
+        self.source_files: List[IO[str]]
         self.output_files: List[str] = []
 
         print("starting task " + str(task.id))  # noqa: T201
@@ -687,18 +687,19 @@ class Runner:
                     original = Path(file)
                     original_name = str(original.absolute())
                     with tempfile.NamedTemporaryFile(
-                        mode="wb+", delete=False, dir=self.temp_path
+                        mode="w+", delete=False, dir=self.temp_path
                     ) as data_file:
                         # write contents
-                        data_file.write(original.read_bytes())
+                        with original.open("r", encoding="utf-8") as original_file:
+                            data_file.write(original_file.read())
 
                         # set name and remove original
                         original.unlink()
 
                         os.link(data_file.name, original_name)
 
-                    data_file.name = original_name  # type: ignore[misc]
-                    self.source_files.append(data_file)
+                    reopened_file = open(data_file.name, "r", encoding="utf-8")
+                    self.source_files.append(reopened_file)
 
             except BaseException as e:
                 raise RunnerException(

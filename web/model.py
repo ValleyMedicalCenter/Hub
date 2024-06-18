@@ -395,7 +395,7 @@ class ConnectionFtp(db.Model):
     )
     name: Mapped[Optional[str]] = mapped_column(db.String(500), nullable=True)
     address: Mapped[Optional[str]] = mapped_column(db.String(500), nullable=True)
-    path: Mapped[Optional[int]] = mapped_column(db.String(500), nullable=True)
+    path: Mapped[Optional[str]] = mapped_column(db.String(500), nullable=True)
     username: Mapped[Optional[str]] = mapped_column(db.String(500), nullable=True)
     password: Mapped[Optional[str]] = mapped_column(db.Text, nullable=True)
     task: Mapped["Task"] = relationship(
@@ -835,7 +835,7 @@ class TaskFile(db.Model):
     task_id: Mapped[Optional[int]] = mapped_column(
         db.Integer, db.ForeignKey(Task.id), nullable=True, index=True
     )
-    job_id: Mapped[Optional[int]] = mapped_column(db.String(1000), nullable=True, index=True)
+    job_id: Mapped[Optional[str]] = mapped_column(db.String(1000), nullable=True, index=True)
     size: Mapped[Optional[str]] = mapped_column(db.String(200), nullable=True, index=True)
     path: Mapped[Optional[str]] = mapped_column(db.String(1000), nullable=True, index=True)
     file_hash: Mapped[Optional[str]] = mapped_column(db.String(1000), nullable=True)
