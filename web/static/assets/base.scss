@@ -41,8 +41,10 @@ $family-sans-serif:
   'Apple Color Emoji',
   'Segoe UI Emoji',
   'Segoe UI Symbol';
+  
 @import 'bulma-checkradio';
-@import '../../../node_modules/bulma/bulma.scss';
+@import '../../../node_modules/bulma/sass';
+
 @import '../../../node_modules/bulma-switch/src/sass';
 @import '../../../node_modules/bulma-tooltip/src/sass';
 
@@ -134,9 +136,8 @@ $family-sans-serif:
 #search-results:active,
 #search-results.search-focus {
   display: block;
-  box-shadow: 0 0.5em 1em -0.125em rgba(255 215 0 / 10%),
-  0 0 0 1px rgba(255 215 0 / 2%);
-  border: 1px solid rgb(255 215 0);
+  box-shadow: $shadow;
+  border: 1px solid $border;
 }
 
 #search-results .panel-block:first-of-type {
@@ -163,8 +164,8 @@ $family-sans-serif:
 }
 
 #search-results em {
-  background-color: hsl(198, 100%, 86%);
-  color: $cyan;
+  background-color: $info-light;
+  color: $info;
 }
 
 /*** tabs ***/

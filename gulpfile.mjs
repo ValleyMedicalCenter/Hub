@@ -28,7 +28,38 @@ task('fontawesome', function(done) {
     deleteSync('web/static/fonts/fontawesome/webfonts', {force:true});
     fontawesomeSubset({
       regular:['circle-play', 'circle-question'],
-      solid: ['triangle-exclamation', 'angle-down', 'circle-pause', 'right-to-bracket', 'users','eye', 'eye-slash', 'arrow-up-right-from-square', 'calendar', 'circle-stop','circle-question', 'circle-notch','circle-xmark', 'circle-check', 'angle-right', 'file-arrow-down', 'circle-info', 'magnifying-glass', 'pen-to-square', 'trash', 'delete-left', 'sort', 'terminal', 'list', 'ban', 'toggle-on', 'toggle-off', 'plus', 'rotate', 'download', 'copy', 'check']
+      solid: ['triangle-exclamation'
+          , 'angle-down'
+          , 'circle-pause'
+          , 'right-to-bracket'
+          , 'users'
+          , 'eye'
+          , 'eye-slash'
+          , 'arrow-up-right-from-square'
+          , 'calendar'
+          , 'circle-stop'
+          , 'circle-question'
+          , 'circle-notch'
+          , 'circle-xmark'
+          , 'circle-check'
+          , 'angle-right'
+          , 'file-arrow-down'
+          , 'circle-info'
+          , 'magnifying-glass'
+          , 'pen-to-square'
+          , 'trash'
+          , 'delete-left'
+          , 'sort'
+          , 'terminal'
+          , 'list'
+          , 'ban'
+          , 'toggle-on'
+          , 'toggle-off'
+          , 'plus'
+          , 'rotate'
+          , 'download'
+          , 'copy'
+          , 'check']
           }, 'web/static/fonts/fontawesome/webfonts')
 
     done();
@@ -45,14 +76,17 @@ task('sass', function() {
     .pipe(postcss(plugins))
     .pipe(
       purgecss({
-        content: ['web/static/lib/**/*.js', 'web/static/js/**/*.js', 'web/templates/**/*.html.j2', 'runner/templates/**/*.html.j2', 'scheduler/templates/**/*.html.j2'],
-        safelist: ['has-text-success', 'mr-3', 'has-text-warning'],
-        whitelist: ['has-text-success', 'mr-3', 'has-text-warning']
+        content: ['web/static/lib/**/*.js'
+          , 'web/static/js/**/*.js'
+          , 'web/templates/**/*.html.j2'
+          , 'runner/templates/**/*.html.j2'
+          , 'scheduler/templates/**/*.html.j2'
+          , 'web/web/*.py'],
+        safelist: [],
+        whitelist: []
       })
     )
-    .pipe(autoprefexer({
-        overrideBrowserslist: ['last 2 versions']
-    }))
+    .pipe(autoprefexer())
     .pipe(dest('web/static/css/'))
 });
 
