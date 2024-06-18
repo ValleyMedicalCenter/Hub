@@ -43,10 +43,8 @@ $family-sans-serif:
   'Segoe UI Symbol';
 @import 'bulma-checkradio';
 @import '../../../node_modules/bulma/sass';
-@import '../../../node_modules/@creativebulma/bulma-badge/src/sass';
 @import '../../../node_modules/bulma-switch/src/sass';
-@import '../../../node_modules/bulma-steps-component/bulma-steps';
-@import '../../../node_modules/@creativebulma/bulma-tooltip/src/sass';
+@import '../../../node_modules/bulma-tooltip/src/sass';
 
 /* purgecss start ignore */
 @import '../fonts/fontawesome/stylesheet';
