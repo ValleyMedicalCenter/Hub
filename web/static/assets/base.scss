@@ -24,8 +24,8 @@ $family-primary:
 // Import the themes so that all CSS variables have a value
 @use "../../../node_modules/bulma/sass/themes";
 
-@forward '../../../node_modules/bulma-switch/src/sass';
-@forward '../../../node_modules/bulma-tooltip/src/sass';
+@forward 'bulma-switch';
+@forward 'bulma-tooltip';
 @forward 'bulma-checkradio';
 /* purgecss start ignore */
 @forward '../fonts/fontawesome/stylesheet';
