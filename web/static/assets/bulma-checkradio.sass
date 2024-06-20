@@ -1,11 +1,12 @@
 @use "sass:math"
-@import "../../../node_modules/bulma-checkradio/node_modules/bulma/sass/utilities/_all.sass"
+@use "../../../node_modules/bulma/sass/utilities" as ut
 
-$checkbox-radius: $radius !default
-$checkbox-border: .1rem solid $grey-lighter !default
-$checkbox-block-background: $white-ter !default
+
+$checkbox-radius: ut.$radius !default
+$checkbox-border: .1rem solid ut.$grey-lighter !default
+$checkbox-block-background: ut.$white-ter !default
 $checkbox-checked-width: .1rem !default
-$checkradio-focus: 1px dotted $grey-light !default
+$checkradio-focus: 1px dotted ut.$grey-light !default
 $checkradio-top-offset: 0rem !default
 
 =checkbox-size($size)
@@ -129,7 +130,7 @@ $checkradio-top-offset: 0rem !default
     + label
       &::before,
       &:before
-        border-color: $primary !important
+        border-color: ut.$primary !important
 
   &:checked
     + label
@@ -191,7 +192,6 @@ $checkradio-top-offset: 0rem !default
       + label
         background: darken($checkbox-block-background, 5%)
 
-
 .is-checkradio[type="checkbox"]
   + label
     &::before,
@@ -204,7 +204,7 @@ $checkradio-top-offset: 0rem !default
       transform: translateY($checkradio-top-offset) rotate(45deg)
       border-width: $checkbox-checked-width
       border-style: solid
-      border-color: $primary
+      border-color: ut.$primary
       border-top: 0
       border-left: 0
 
@@ -214,68 +214,70 @@ $checkradio-top-offset: 0rem !default
       &:before
         border-radius: 50%
 
-  +checkbox-size($size-normal)
+  +checkbox-size(ut.$size-normal)
   &.is-small
-    +checkbox-size($size-small)
+    +checkbox-size(ut.$size-small)
   &.is-medium
-    +checkbox-size($size-medium)
+    +checkbox-size(ut.$size-medium)
   &.is-large
-    +checkbox-size($size-large)
+    +checkbox-size(ut.$size-large)
 
-  @each $name, $pair in $colors
-    $color: nth($pair, 1)
-    $color-invert: nth($pair, 2)
-    &.is-#{$name}
-      &.has-background-color
-        + label
-          &::before,
-          &:before
-            border-color: transparent !important
-            background-color: $color !important
-      &:hover:not([disabled])
-        + label
-          &::before,
-          &:before
-            border-color: $color !important
-      &:checked
-        + label
-          &::after,
-          &:after
-            border-color: $color !important
+
+  @each $name, $pair in ut.$colors
+    @if length($name) > 1
+      $color: nth($pair, 1)
+      $color-invert: nth($pair, 2)
+      &.is-#{$name}
         &.has-background-color
           + label
             &::before,
             &:before
               border-color: transparent !important
               background-color: $color !important
-            &::after,
-            &:after
-              border-color: $color-invert !important
-              background-color: $color !important
-      &.is-block
         &:hover:not([disabled])
           + label
-            &::after,
-            &:after,
             &::before,
             &:before
               border-color: $color !important
         &:checked
           + label
-            color: $color-invert
-            border-color: $color !important
-            background: $color
             &::after,
             &:after
-              border-color: $color-invert !important
+              border-color: $color !important
+          &.has-background-color
+            + label
+              &::before,
+              &:before
+                border-color: transparent !important
+                background-color: $color !important
+              &::after,
+              &:after
+                border-color: $color-invert !important
+                background-color: $color !important
+        &.is-block
           &:hover:not([disabled])
             + label
-              background: darken($color, 5%)
               &::after,
               &:after,
               &::before,
               &:before
-                border-color: darken($color-invert, 5%) !important
+                border-color: $color !important
+          &:checked
+            + label
+              color: $color-invert
+              border-color: $color !important
+              background: $color
+              &::after,
+              &:after
+                border-color: $color-invert !important
+            &:hover:not([disabled])
+              + label
+                background: darken($color, 5%)
+                &::after,
+                &:after,
+                &::before,
+                &:before
+                  border-color: darken($color-invert, 5%) !important
 
   &:indeterminate
     + label
@@ -284,14 +286,15 @@ $checkradio-top-offset: 0rem !default
         display: inline-block
         transform: rotate(90deg)
         border-bottom: none
-    @each $name, $pair in $colors
-      $color: nth($pair, 1)
-      $color-invert: nth($pair, 2)
-      &.is-#{$name}
-        + label
-          &::after,
-          &:after
-            border-color: $color
+    @each $name, $pair in ut.$colors
+      @if length($name) > 1
+        $color: nth($pair, 1)
+        $color-invert: nth($pair, 2)
+        &.is-#{$name}
+          + label
+            &::after,
+            &:after
+              border-color: $color
 
 .is-checkradio[type="radio"]
   + label
@@ -301,7 +304,7 @@ $checkradio-top-offset: 0rem !default
     &::after,
     &:after
       border-radius: 50%
-      background: $primary
+      background: ut.$primary
       left: 0
       transform: scale(0.5)
 
@@ -310,12 +313,12 @@ $checkradio-top-offset: 0rem !default
       + label
         &::before,
         &:before
-          border-color: $text !important
-          background-color: $text !important
+          border-color: ut.$text !important
+          background-color: ut.$text !important
         &::after,
         &:after
-          border-color: $text !important
-          background-color: $text !important
+          border-color: ut.$text !important
+          background-color: ut.$text !important
 
   &.is-rtl
     + label
@@ -325,42 +328,43 @@ $checkradio-top-offset: 0rem !default
         left: auto
         right: 0
 
-  +radio-size($size-normal)
+  +radio-size(ut.$size-normal)
   &.is-small
-    +radio-size($size-small)
+    +radio-size(ut.$size-small)
   &.is-medium
-    +radio-size($size-medium)
+    +radio-size(ut.$size-medium)
   &.is-large
-    +radio-size($size-large)
+    +radio-size(ut.$size-large)
 
-  @each $name, $pair in $colors
-    $color: nth($pair, 1)
-    $color-invert: nth($pair, 2)
-    &.is-#{$name}
-      &.has-background-color
-        + label
-          &::before,
-          &:before
-            border-color: $color !important
-            background-color: $color !important
-      &:hover:not([disabled])
-        + label
-          &::before,
-          &:before
-            border-color: $color !important
-      &:checked
-        + label
-          &::after,
-          &:after
-            border-color: $color !important
-            background-color: $color !important
+  @each $name, $pair in ut.$colors
+    @if length($name) > 1
+      $color: nth($pair, 1)
+      $color-invert: nth($pair, 2)
+      &.is-#{$name}
         &.has-background-color
           + label
             &::before,
             &:before
               border-color: $color !important
               background-color: $color !important
+        &:hover:not([disabled])
+          + label
+            &::before,
+            &:before
+              border-color: $color !important
+        &:checked
+          + label
             &::after,
             &:after
-              border-color: $color-invert !important
-              background-color: $color-invert !important
+              border-color: $color !important
+              background-color: $color !important
+          &.has-background-color
+            + label
+              &::before,
+              &:before
+                border-color: $color !important
+                background-color: $color !important
+              &::after,
+              &:after
+                border-color: $color-invert !important
+                background-color: $color-invert !important
