@@ -687,18 +687,18 @@ class Runner:
                     original = Path(file)
                     original_name = str(original.absolute())
                     with tempfile.NamedTemporaryFile(
-                        mode="w+", delete=False, dir=self.temp_path
+                        mode="wb+", delete=False, dir=self.temp_path
                     ) as data_file:
                         # write contents
-                        with original.open("r", encoding="utf-8") as original_file:
-                            data_file.write(original_file.read())
+                        with original.open("rb", encoding="utf-8") as original_file:
+                            data_file.write(original_file.read_bytes())
 
                         # set name and remove original
                         original.unlink()
 
                         os.link(data_file.name, original_name)
 
-                    reopened_file = open(data_file.name, "r", encoding="utf-8")
+                    reopened_file = open(data_file.name, "rb", encoding="utf-8")
                     self.source_files.append(reopened_file)
 
             except BaseException as e:

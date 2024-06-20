@@ -37,6 +37,7 @@ from runner.scripts.em_smtp import Smtp
 from runner.scripts.em_sqlserver import connect as sql_connect
 from runner.scripts.em_ssh import connect as ssh_connect
 from runner.scripts.task_runner import Runner
+from runner.web.filters import datetime_format
 
 web_bp = Blueprint("web_bp", __name__)
 
@@ -44,7 +45,7 @@ env = Environment(
     loader=PackageLoader("runner", "templates"),
     autoescape=select_autoescape(["html", "xml"]),
 )
-
+env.filters["datetime_format"] = datetime_format
 sys.path.append(str(Path(__file__).parents[2]) + "/scripts")
 from crypto import em_decrypt
 
@@ -193,7 +194,7 @@ def send_smb(run_id: int, file_id: int) -> Response:
         return jsonify({"error": str(e)})
 
 
-@web_bp.route("/api/send_email/<task_id>/<run_id>/<file_id>")
+@web_bp.route("/api/send_email/<run_id>/<file_id>")
 def send_email(run_id: int, file_id: int) -> Response:
     """Send file to email address specified in the task.
 
@@ -235,7 +236,12 @@ def send_email(run_id: int, file_id: int) -> Response:
             short_message=f"Atlas Hub: {task.name} data emailed.",
             subject="(Manual Send) Project: " + task.project.name + " / Task: " + task.name,
             message=template.render(
-                task=task, success=1, date=date, logs=[], org=app.config["ORG_NAME"]
+                task=task,
+                success=1,
+                date=date,
+                logs=[],
+                host=app.config["WEB_HOST"],
+                org=app.config["ORG_NAME"],
             ),
             attachments=[x.name for x in downloaded_files],
         )

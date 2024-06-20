@@ -206,7 +206,7 @@ class Smb:
 
         # send back contents
 
-        with tempfile.NamedTemporaryFile(mode="w+", delete=False, dir=self.dir) as data_file:
+        with tempfile.NamedTemporaryFile(mode="wb+", delete=False, dir=self.dir) as data_file:
             for data in load_data(open_file_for_read):
                 if self.task.source_smb_ignore_delimiter != 1 and self.task.source_smb_delimiter:
                     my_delimiter = self.task.source_smb_delimiter or ","

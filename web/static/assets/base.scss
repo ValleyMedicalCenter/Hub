@@ -11,7 +11,6 @@ $family-primary:
 @use '../../../node_modules/bulma/sass/elements' with (
   $title-family: "Rasa, Georgia, Times New Roman, serif"
 );
-// Import the components you need
 @forward "../../../node_modules/bulma/sass/base";
 @use "../../../node_modules/bulma/sass/components" with (
   $breadcrumb-item-active-color: #363636
