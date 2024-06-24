@@ -487,7 +487,7 @@ class ConnectionDatabase(db.Model):
     )
     name: Mapped[Optional[str]] = mapped_column(db.String(500), nullable=True)
     connection_string: Mapped[Optional[str]] = mapped_column(db.Text, nullable=True)
-    timeout: Mapped[Optional[str]] = mapped_column(db.Integer, nullable=True)
+    timeout: Mapped[Optional[int]] = mapped_column(db.Integer, nullable=True)
     task_source: Mapped["Task"] = relationship(
         backref="source_database_conn",
         lazy=True,

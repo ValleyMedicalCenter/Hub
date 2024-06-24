@@ -185,7 +185,7 @@ class Smb:
             new_path = str(Path(directory).joinpath(dirname))
             yield from self._walk(new_path)
 
-    def __load_file(self, file_name: str, index: int, length: int) -> IO[str]:
+    def __load_file(self, file_name: str, index: int, length: int) -> IO[Any]:
         RunnerLog(self.task, self.run_id, 10, f"({index} of {length}) downloading {file_name}")
 
         director = urllib.request.build_opener(SMBHandler)
