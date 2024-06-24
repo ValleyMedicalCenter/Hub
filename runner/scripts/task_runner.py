@@ -690,16 +690,15 @@ class Runner:
                         mode="wb+", delete=False, dir=self.temp_path
                     ) as data_file:
                         # write contents
-                        with original.open("rb", encoding="utf-8") as original_file:
-                            data_file.write(original_file.read_bytes())
+                        data_file.write(original.read_bytes())
 
                         # set name and remove original
                         original.unlink()
 
                         os.link(data_file.name, original_name)
 
-                    reopened_file = open(data_file.name, "rb", encoding="utf-8")
-                    self.source_files.append(reopened_file)
+                    data_file.name = original_name
+                    self.source_files.append(data_file)  # type: ignore
 
             except BaseException as e:
                 raise RunnerException(
