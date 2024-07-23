@@ -882,10 +882,13 @@ class Runner:
                         # don't attach file if it is just the header.
                         and (
                             os.path.getsize(output_file) == 0
-                            or (self.task.source_require_sql_output == 1 and num_lines <= 1)
+                            or (self.task.source_query_include_header == 1 and num_lines <= 1)
                         )
                     ):
                         empty = 1
+                    # there may be multiple output files. If one isn't empty, still include it.
+                    else:
+                        empty = 0
 
                     attachments.append(output_file)
 
