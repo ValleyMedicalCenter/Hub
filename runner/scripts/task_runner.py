@@ -871,8 +871,8 @@ class Runner:
                     if self.task.email_completion_file_embed == 1:
                         with open(output_file, newline="") as csvfile:
                             output.extend(list(csv.reader(csvfile)))
-                            num_lines = sum(1 for _ in csvfile)
-
+                        with open(output_file, "r") as f:
+                            num_lines = len(f.readlines())
                     # check attachement file size if the task
                     # should not send blank files
                     if (
