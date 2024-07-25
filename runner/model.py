@@ -21,7 +21,6 @@ migrations file - so flask-migrations think it has already applied the migration
 """
 
 import datetime
-from dataclasses import dataclass
 from typing import List, Optional
 
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -30,7 +29,6 @@ from sqlalchemy.sql import functions
 from .extensions import db
 
 
-@dataclass
 class LoginType(db.Model):
     """Lookup table of user login types."""
 
@@ -41,7 +39,6 @@ class LoginType(db.Model):
     login: Mapped[List["Login"]] = relationship(back_populates="login_type", lazy=True)
 
 
-@dataclass
 class Login(db.Model):
     """Table should contain all login attempts."""
 
@@ -58,7 +55,6 @@ class Login(db.Model):
     login_type: Mapped["LoginType"] = relationship(back_populates="login")
 
 
-@dataclass
 class User(db.Model):
     """Table containing any user-specific information."""
 
@@ -101,7 +97,6 @@ class User(db.Model):
         return self.full_name or f"User {self.id}"
 
 
-@dataclass
 class Project(db.Model):
     """Table containing project details."""
 
@@ -176,7 +171,6 @@ class Project(db.Model):
         return str(self.name)
 
 
-@dataclass
 class TaskSourceType(db.Model):
     """Lookup table of task source types."""
 
@@ -187,7 +181,6 @@ class TaskSourceType(db.Model):
     task: Mapped["Task"] = relationship(backref="source_type", lazy=True)
 
 
-@dataclass
 class TaskSourceQueryType(db.Model):
     """Lookup table of task query source types."""
 
@@ -198,7 +191,6 @@ class TaskSourceQueryType(db.Model):
     task: Mapped["Task"] = relationship(backref="query_type", lazy=True)
 
 
-@dataclass
 class TaskProcessingType(db.Model):
     """Lookup table of task query source types."""
 
@@ -209,7 +201,6 @@ class TaskProcessingType(db.Model):
     task: Mapped["Task"] = relationship(backref="processing_type", lazy=True)
 
 
-@dataclass
 class TaskStatus(db.Model):
     """Lookup table of task status types.
 
@@ -234,7 +225,6 @@ class TaskStatus(db.Model):
     )
 
 
-@dataclass
 class Connection(db.Model):
     """Table containing all destination information."""
 
@@ -284,7 +274,6 @@ class Connection(db.Model):
         return str(self.name)
 
 
-@dataclass
 class ConnectionSftp(db.Model):
     """Table conntaining sftp connection strings."""
 
@@ -328,7 +317,6 @@ class ConnectionSftp(db.Model):
         return str(self.name)
 
 
-@dataclass
 class ConnectionSsh(db.Model):
     """Table conntaining sftp connection strings."""
 
@@ -356,7 +344,6 @@ class ConnectionSsh(db.Model):
         return str(self.name)
 
 
-@dataclass
 class ConnectionGpg(db.Model):
     """Table conntaining gpg keys."""
 
@@ -381,7 +368,6 @@ class ConnectionGpg(db.Model):
         return str(self.name)
 
 
-@dataclass
 class ConnectionFtp(db.Model):
     """Table conntaining sftp connection strings."""
 
@@ -420,7 +406,6 @@ class ConnectionFtp(db.Model):
         return str(self.name)
 
 
-@dataclass
 class ConnectionSmb(db.Model):
     """Table conntaining sftp connection strings."""
 
@@ -461,7 +446,6 @@ class ConnectionSmb(db.Model):
         return str(self.name)
 
 
-@dataclass
 class ConnectionDatabaseType(db.Model):
     """Lookup table of task source database types."""
 
@@ -472,7 +456,6 @@ class ConnectionDatabaseType(db.Model):
     database: Mapped["ConnectionDatabase"] = relationship(backref="database_type", lazy=True)
 
 
-@dataclass
 class ConnectionDatabase(db.Model):
     """List of task source databases and connection strings."""
 
@@ -500,7 +483,6 @@ class ConnectionDatabase(db.Model):
         return str(self.name)
 
 
-@dataclass
 class TaskDestinationFileType(db.Model):
     """Lookup table of task destination file types."""
 
@@ -512,7 +494,6 @@ class TaskDestinationFileType(db.Model):
     task: Mapped["Task"] = relationship(backref="file_type", lazy=True)
 
 
-@dataclass
 class QuoteLevel(db.Model):
     """Lookup table for python quote levels."""
 
@@ -523,7 +504,6 @@ class QuoteLevel(db.Model):
     task: Mapped["Task"] = relationship(backref="destination_file_quote_level", lazy=True)
 
 
-@dataclass
 class ProjectParam(db.Model):
     """Task parameters."""
 
@@ -538,7 +518,6 @@ class ProjectParam(db.Model):
     sensitive: Mapped[Optional[int]] = mapped_column(db.Integer, nullable=True, index=True)
 
 
-@dataclass
 class Task(db.Model):
     """Table containing task details."""
 
@@ -824,7 +803,6 @@ class TaskLog(db.Model):
     __table_args__ = (db.Index("ix_task_log_status_date_error", "status_date", "error"),)
 
 
-@dataclass
 class TaskFile(db.Model):
     """Table containing paths to task backup files."""
 
@@ -846,7 +824,6 @@ class TaskFile(db.Model):
     __table_args__ = (db.Index("ix_task_file_id_task_id_job_id", "id", "task_id", "job_id"),)
 
 
-@dataclass
 class TaskParam(db.Model):
     """Task parameters."""
 
