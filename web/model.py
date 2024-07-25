@@ -26,7 +26,7 @@ from typing import List, Optional
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import functions
 
-from .extensions import db
+from .extensions import db, str_120, str_200, str_8000
 
 
 class LoginType(db.Model):
@@ -34,8 +34,8 @@ class LoginType(db.Model):
 
     __tablename__ = "login_type"
 
-    id: Mapped[int] = mapped_column(db.Integer, primary_key=True, index=True)
-    name: Mapped[Optional[str]] = mapped_column(db.String(120), nullable=True)
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    name: Mapped[Optional[str_120]]
     login: Mapped[List["Login"]] = relationship(back_populates="login_type", lazy=True)
 
 
@@ -44,14 +44,10 @@ class Login(db.Model):
 
     __tablename__ = "login"
 
-    id: Mapped[int] = mapped_column(db.Integer, primary_key=True, index=True)
-    type_id: Mapped[Optional[int]] = mapped_column(
-        db.Integer, db.ForeignKey(LoginType.id), nullable=True
-    )
-    username: Mapped[Optional[str]] = mapped_column(db.String(120), nullable=True)
-    login_date: Mapped[Optional[datetime.datetime]] = mapped_column(
-        db.DateTime, server_default=functions.now()
-    )
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    type_id: Mapped[Optional[int]] = mapped_column(db.ForeignKey(LoginType.id))
+    username: Mapped[Optional[str_120]]
+    login_date: Mapped[Optional[datetime.datetime]] = mapped_column(server_default=functions.now())
     login_type: Mapped["LoginType"] = relationship(back_populates="login")
 
 
@@ -60,11 +56,11 @@ class User(db.Model):
 
     # pylint: disable=too-many-instance-attributes
 
-    id: Mapped[int] = mapped_column(db.Integer, primary_key=True, index=True)
-    account_name: Mapped[Optional[str]] = mapped_column(db.String(200), nullable=True, index=True)
-    email: Mapped[Optional[str]] = mapped_column(db.String(200), nullable=True, index=True)
-    full_name: Mapped[Optional[str]] = mapped_column(db.String(200), nullable=True)
-    first_name: Mapped[Optional[str]] = mapped_column(db.String(200), nullable=True)
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    account_name: Mapped[Optional[str_200]] = mapped_column(index=True)
+    email: Mapped[Optional[str_200]] = mapped_column(index=True)
+    full_name: Mapped[Optional[str_200]]
+    first_name: Mapped[Optional[str_200]]
     project_owner: Mapped["Project"] = relationship(
         backref="project_owner", lazy=True, foreign_keys="Project.owner_id"
     )
@@ -103,21 +99,19 @@ class Project(db.Model):
     # pylint: disable=too-many-instance-attributes
 
     id: Mapped[int] = mapped_column(db.Integer, primary_key=True, index=True)
-    name: Mapped[Optional[str]] = mapped_column(db.String(120), nullable=True)
-    description: Mapped[Optional[str]] = mapped_column(db.String(8000), nullable=True)
-    owner_id: Mapped[Optional[int]] = mapped_column(
-        db.Integer, db.ForeignKey(User.id), nullable=True, index=True
-    )
+    name: Mapped[Optional[str_120]]
+    description: Mapped[Optional[str_8000]]
+    owner_id: Mapped[Optional[int]] = mapped_column(db.Integer, db.ForeignKey(User.id), index=True)
 
-    cron: Mapped[Optional[int]] = mapped_column(db.Integer, nullable=True)
-    cron_year: Mapped[Optional[str]] = mapped_column(db.String(120), nullable=True)
-    cron_month: Mapped[Optional[str]] = mapped_column(db.String(120), nullable=True)
-    cron_week: Mapped[Optional[str]] = mapped_column(db.String(120), nullable=True)
-    cron_day: Mapped[Optional[str]] = mapped_column(db.String(120), nullable=True)
-    cron_week_day: Mapped[Optional[str]] = mapped_column(db.String(120), nullable=True)
-    cron_hour: Mapped[Optional[str]] = mapped_column(db.String(120), nullable=True)
-    cron_min: Mapped[Optional[str]] = mapped_column(db.String(120), nullable=True)
-    cron_sec: Mapped[Optional[str]] = mapped_column(db.String(120), nullable=True)
+    cron: Mapped[Optional[int]]
+    cron_year: Mapped[Optional[str_120]]
+    cron_month: Mapped[Optional[str_120]]
+    cron_week: Mapped[Optional[str_120]]
+    cron_day: Mapped[Optional[str_120]]
+    cron_week_day: Mapped[Optional[str_120]]
+    cron_hour: Mapped[Optional[str_120]]
+    cron_min: Mapped[Optional[str_120]]
+    cron_sec: Mapped[Optional[str_120]]
     cron_start_date: Mapped[Optional[datetime.datetime]] = mapped_column(
         db.DateTime, nullable=True
     )

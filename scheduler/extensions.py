@@ -15,6 +15,26 @@ scripts after running :obj:`scheduler.create_app`
 
 from flask_apscheduler import APScheduler
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import Numeric, String
+from sqlalchemy.orm import DeclarativeBase, registry
+from typing_extensions import Annotated
 
-db = SQLAlchemy()
+str_120 = Annotated[str, 120]
+str_200 = Annotated[str, 200]
+str_8000 = Annotated[str, 8000]
+
+
+class Base(DeclarativeBase):
+    """Declare base types."""
+
+    registry = registry(
+        type_annotation_map={
+            str_120: String(120),
+            str_200: String(200),
+            str_8000: String(8000),
+        }
+    )
+
+
+db = SQLAlchemy(model_class=Base)
 atlas_scheduler = APScheduler()
