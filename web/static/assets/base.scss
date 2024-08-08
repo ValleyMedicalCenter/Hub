@@ -24,19 +24,19 @@
 // Import the themes so that all CSS variables have a value
 @use '../../../node_modules/bulma/sass/themes';
 
-@forward 'bulma-switch';
-@forward 'bulma-tooltip';
-@forward 'bulma-checkradio';
+@import 'bulma-switch';
+@import 'bulma-tooltip';
+@import 'bulma-checkradio';
 /* purgecss start ignore */
-@forward '../fonts/fontawesome/stylesheet';
-@forward '../lib/codemirror/codemirror';
-@forward '../lib/codemirror/ttcn';
-@forward '../lib/codemirror/simplescrollbars';
-@forward '../lib/scroll/scroll';
-@forward '../lib/prism/prism';
-@forward '../lib/table/table';
-@forward '../lib/prism/prism_line_numbers';
-@forward '../lib/flatpickr/flatpickr';
+@import '../fonts/fontawesome/stylesheet';
+@import '../lib/codemirror/codemirror';
+@import '../lib/codemirror/ttcn';
+@import '../lib/codemirror/simplescrollbars';
+@import '../lib/scroll/scroll';
+@import '../lib/prism/prism';
+@import '../lib/table/table';
+@import '../lib/prism/prism_line_numbers';
+@import '../lib/flatpickr/flatpickr';
 
 @include Inter.faces(
   $family: 'Inter',
@@ -137,7 +137,6 @@
 #search-results:active,
 #search-results.search-focus {
   display: block;
-  //box-shadow: utilities.$shadow;
   border: 1px solid utilities.$border;
 }
 
