@@ -21,13 +21,7 @@ css = Bundle(
 web_assets.register("css", css)
 
 js = Bundle(
-    "./lib/codemirror/codemirror.js",
-    "./lib/codemirror/gfm.js",
-    "./lib/codemirror/overlay.js",
-    "./lib/codemirror/sql.js",
-    "./lib/codemirror/python.js",
-    "./lib/codemirror/matchbrackets.js",
-    "./lib/codemirror/simplescrollbars.js",
+    "../../node_modules/codemirror/src/codemirror.js",
     filters=("uglifyjs"),
     output="js/codemirror.min.js",
 )
