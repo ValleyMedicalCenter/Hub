@@ -445,9 +445,7 @@ class ConnectionDatabase(db.Model):
     __tablename__ = "connection_database"
 
     id: Mapped[intpk]
-    type_id: Mapped[Optional[int]] = mapped_column(
-        db.ForeignKey(ConnectionDatabaseType.id), index=True
-    )
+    type_id: Mapped[Optional[int]] = mapped_column(db.ForeignKey(ConnectionDatabaseType.id))
     connection_id: Mapped[Optional[int]] = mapped_column(db.ForeignKey(Connection.id), index=True)
     name: Mapped[Optional[str_500]]
     connection_string: Mapped[Optional[str]] = mapped_column(db.Text, nullable=True)
@@ -508,7 +506,7 @@ class Task(db.Model):
     id: Mapped[intpk]
     name: Mapped[Optional[str_1000]]
     project_id: Mapped[Optional[int]] = mapped_column(db.ForeignKey(Project.id), index=True)
-    status_id: Mapped[Optional[int]] = mapped_column(db.ForeignKey(TaskStatus.id), index=True)
+    status_id: Mapped[Optional[int]] = mapped_column(db.ForeignKey(TaskStatus.id))
     enabled: Mapped[Optional[int]] = mapped_column(index=True)
     order: Mapped[Optional[int]] = mapped_column(index=True)
     last_run: Mapped[Optional[datetime.datetime]]
@@ -604,9 +602,7 @@ class Task(db.Model):
 
     """ processing script source """
 
-    processing_type_id: Mapped[Optional[int]] = mapped_column(
-        db.ForeignKey(TaskProcessingType.id), index=True
-    )
+    processing_type_id: Mapped[Optional[int]] = mapped_column(db.ForeignKey(TaskProcessingType.id))
 
     processing_smb_id: Mapped[Optional[int]] = mapped_column(
         db.ForeignKey(ConnectionSmb.id), index=True
@@ -643,7 +639,7 @@ class Task(db.Model):
 
     # csv/txt/other
     destination_file_type_id: Mapped[Optional[int]] = mapped_column(
-        db.ForeignKey(TaskDestinationFileType.id), index=True
+        db.ForeignKey(TaskDestinationFileType.id)
     )
 
     # save to sftp server
