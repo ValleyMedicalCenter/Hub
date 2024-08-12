@@ -45,11 +45,7 @@ def upgrade():
     # with op.batch_alter_table('task_destination_file_type', schema=None) as batch_op:
     #    batch_op.create_index(batch_op.f('ix_task_destination_file_type_id'), ['id'], unique=False)
 
-    with op.batch_alter_table('task_log', schema=None) as batch_op:
-        batch_op.alter_column('error',
-               existing_type=sa.INTEGER(),
-               type_=sa.String(),
-               existing_nullable=True)
+    
     # these are auto added by postgres, but added to this file so they will not be added again.
     # with op.batch_alter_table('task_processing_type', schema=None) as batch_op:
     #    batch_op.create_index(batch_op.f('ix_task_processing_type_id'), ['id'], unique=False)
@@ -68,11 +64,6 @@ def downgrade():
     with op.batch_alter_table('task_processing_type', schema=None) as batch_op:
         batch_op.drop_index(batch_op.f('ix_task_processing_type_id'))
 
-    with op.batch_alter_table('task_log', schema=None) as batch_op:
-        batch_op.alter_column('error',
-               existing_type=sa.String(),
-               type_=sa.INTEGER(),
-               existing_nullable=True)
 
     with op.batch_alter_table('task_destination_file_type', schema=None) as batch_op:
         batch_op.drop_index(batch_op.f('ix_task_destination_file_type_id'))
