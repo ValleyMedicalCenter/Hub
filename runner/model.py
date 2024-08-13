@@ -738,7 +738,7 @@ class TaskLog(db.Model):
     status_date: Mapped[Optional[datetime.datetime]] = mapped_column(
         default=datetime.datetime.now, index=True
     )
-    error: Mapped[Optional[str]] = mapped_column(index=True)
+    error: Mapped[Optional[int]] = mapped_column(index=True)
 
     __table_args__ = (db.Index("ix_task_log_status_date_error", "status_date", "error"),)
 
