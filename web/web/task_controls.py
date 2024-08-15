@@ -25,7 +25,7 @@ def run_task(task_id: int) -> Response:
         if task.project.sequence_tasks == 1:
             tasks = db.session.execute(
                 db.select(Task).filter_by(project_id=task.project_id, enabled=1, order=task.order)
-            )
+            ).scalars()
             for t in tasks:
                 try:
                     requests.get(app.config["SCHEDULER_HOST"] + "/run/" + str(t.id), timeout=60)

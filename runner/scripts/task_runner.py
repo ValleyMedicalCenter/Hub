@@ -172,7 +172,6 @@ class Runner:
         redis_client.delete(f"runner_{task_id}_attempt")
         task.status_id = 4
         task.est_duration = (datetime.datetime.now() - task.last_run).total_seconds()
-
         # if this is a sequence job, trigger the next job.
         if task.project.sequence_tasks == 1:
             task_id_list = [
@@ -188,15 +187,16 @@ class Runner:
             runners = db.session.execute(
                 db.select(Task)
                 .filter_by(enabled=1, order=task.order, project_id=task.project_id)
-                .filter(Task.status != 4)
-            ).scalor_one()
+                .where(Task.status_id != 4)
+                .where(Task.id != task.id)
+            ).scalar()
 
             # potentially the task was disabled while running
             # and removed from list. when that happens we should
             # quit.
             # if there are any runners also then quit.
             if (
-                db.session.execute(db.select(Task).filter_by(enabled=1, id=task.id))
+                db.session.execute(db.select(Task).filter_by(enabled=1, id=task.id)).scalar()
                 and not runners
             ):
 
