@@ -252,18 +252,24 @@ def run_project(project_list: List[int]) -> str:
     project_id: int = project_list[0]
     project = Project.query.filter_by(id=project_id).first()
 
-    tasks = Task.query.filter_by(project_id=project_id, enabled=1).order_by(
-        Task.order.asc(), Task.name.asc()  # type: ignore[union-attr]
+    tasks = db.session.execute(
+        db.select(Task)
+        .filter_by(project_id=project_id, enabled=1)
+        .order_by(Task.order.asc(), Task.name.asc())
     )
 
     if project.sequence_tasks == 1:
-        # run first enabled, order by rank, name
-        send_task_to_runner(tasks.first().id)
-        log = TaskLog(
-            task_id=tasks.first().id,
-            status_id=7,
-            message=(current_user.full_name or "none") + ": Task manually run.",
-        )
+
+        # run all lowest level sequence tasks
+        task_sequence = tasks.first().order
+        for task in tasks:
+            if task.order == task_sequence:
+                send_task_to_runner(task.id)
+                log = TaskLog(
+                    task_id=task.id,
+                    status_id=7,
+                    message=(current_user.full_name or "none") + ": Task manually run.",
+                )
         db.session.add(log)
         db.session.commit()
         return "Project sequence run started."

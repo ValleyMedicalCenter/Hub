@@ -174,39 +174,36 @@ class Runner:
         task.est_duration = (datetime.datetime.now() - task.last_run).total_seconds()
 
         # if this is a sequence job, trigger the next job.
-        if task.project.sequence_tasks == 1 and task.last_run_job_id == None:
+        if task.project.sequence_tasks == 1:
             task_id_list = [
                 x.id
-                for x in Task.query.filter_by(enabled=1, project_id=task.project_id)
+                for x in Task.query.filter_by(
+                    enabled=1, project_id=task.project_id, order=task.order + 1
+                )
                 .order_by(Task.order.asc(), Task.name.asc())  # type: ignore[union-attr]
                 .all()
             ]
 
+            # check if any are still running in same order.
+            runners = db.session.execute(
+                db.select(Task)
+                .filter_by(enabled=1, order=task.order, project_id=task.project_id)
+                .filter(Task.status != 4)
+            ).scalor_one()
+
             # potentially the task was disabled while running
             # and removed from list. when that happens we should
             # quit.
-            if task.id in task_id_list:
-                next_task_id = task_id_list[
-                    task_id_list.index(task.id) + 1 : task_id_list.index(task.id) + 2
-                ]
+            # if there are any runners also then quit.
+            if (
+                db.session.execute(db.select(Task).filter_by(enabled=1, id=task.id))
+                and not runners
+            ):
 
-                if next_task_id:
+                if task_id_list:
 
-                    tasks_sequence = (
-                        Task.query.filter(id=next_task_id[0]).first().order
-                    )  # get the sequence number
-                    # get list of ids that have the same sequence id as the next_task_id and don't include the id that was just kicked off.
-                    # if we loop and go through kicking off all the ids. We need to make sure that none of them get kicked off again.
-                    tasks_parallel = [
-                        x.id
-                        for x in Task.query.filter_by(
-                            enabled=1,
-                            project_id=task.project_id,
-                            order=tasks_sequence,
-                            last_run_job_id=None,
-                        ).filter(id != task.id)
-                    ]
-                    for parallel_id in tasks_parallel:
+                    RunnerLog(self.task, self.run_id, 8, " ".join(str(x) for x in task_id_list))
+                    for parallel_id in task_id_list:
                         # trigger next tasks
                         RunnerLog(
                             self.task,
@@ -215,7 +212,7 @@ class Runner:
                             f"Triggering run of next sequence job: {parallel_id}.",
                         )
 
-                        next_task = Task.query.filter(id=parallel_id).first()
+                        next_task = Task.query.filter_by(id=parallel_id).first()
 
                         RunnerLog(
                             next_task,
