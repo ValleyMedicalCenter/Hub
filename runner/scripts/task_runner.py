@@ -184,7 +184,6 @@ class Runner:
                 .scalars()
                 .all()
             )
-            task_sequence = task_list[0].order
 
             # check if any are still running in same order.
             runners = db.session.execute(
@@ -206,7 +205,7 @@ class Runner:
             ):
 
                 if task_list:
-
+                    task_sequence = task_list[0].order
                     for tsk in task_list:
                         if tsk.order == task_sequence:
                             # trigger next tasks
