@@ -175,7 +175,7 @@ def sub_enable_task(task: Task) -> None:
     redis_client.delete("runner_" + str(task.id) + "_attempt")
 
     # task only goes to scheduler if not sequence, or first in sequence.
-    if task.project and task.project.sequence_tasks == 1:
+    if task.project.sequence_tasks == 1:
         # only add job if its first in sequence
         first_sequence = (
             db.session.execute(

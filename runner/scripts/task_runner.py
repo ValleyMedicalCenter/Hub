@@ -174,20 +174,23 @@ class Runner:
         task.est_duration = (datetime.datetime.now() - task.last_run).total_seconds()
         # if this is a sequence job, trigger the next job.
         if task.project.sequence_tasks == 1:
-            task_id_list = (
+            task_list = (
                 db.session.execute(
-                    db.select(Task).filter_by(
-                        enabled=1, project_id=task.project_id, order=task.order + 1
-                    )
+                    db.select(Task)
+                    .filter_by(enabled=1, project_id=task.project_id)
+                    .where(Task.order > task.order)
+                    .order_by(Task.order.asc())
                 )
                 .scalars()
                 .all()
             )
+            task_sequence = task_list[0].order
 
             # check if any are still running in same order.
             runners = db.session.execute(
                 db.select(Task)
                 .filter_by(enabled=1, order=task.order, project_id=task.project_id)
+                # 4 is completed. This also filters out error tasks
                 .where(Task.status_id != 4)
                 .where(Task.id != task.id)
             ).scalar()
@@ -195,42 +198,42 @@ class Runner:
             # potentially the task was disabled while running
             # and removed from list. when that happens we should
             # quit.
-            # if there are any runners also then quit.
+            # also make sure everything is completed before
+            # going on to starting next tasks.
             if (
                 db.session.execute(db.select(Task).filter_by(enabled=1, id=task.id)).scalar()
                 and not runners
             ):
 
-                if task_id_list:
+                if task_list:
 
-                    for parallel_id in task_id_list:
-                        # trigger next tasks
-                        RunnerLog(
-                            self.task,
-                            self.run_id,
-                            8,
-                            f"Triggering run of next sequence job: {parallel_id.id}.",
-                        )
-
-                        next_task = (
-                            db.session.execute(
-                                db.select(Task).filter_by(id=parallel_id.id).limit(1)
+                    for tsk in task_list:
+                        if tsk.order == task_sequence:
+                            # trigger next tasks
+                            RunnerLog(
+                                self.task,
+                                self.run_id,
+                                8,
+                                f"Triggering run of next sequence job: {tsk.id}.",
                             )
-                            .scalars()
-                            .first()
-                        )
 
-                        RunnerLog(
-                            next_task,
-                            None,
-                            8,
-                            f"Run triggered by previous sequence job: {task.id}.",
-                        )
+                            next_task = (
+                                db.session.execute(db.select(Task).filter_by(id=tsk.id).limit(1))
+                                .scalars()
+                                .first()
+                            )
 
-                        requests.get(
-                            app.config["RUNNER_HOST"] + "/" + str(parallel_id.id),
-                            timeout=60,
-                        )
+                            RunnerLog(
+                                next_task,
+                                None,
+                                8,
+                                f"Run triggered by previous sequence job: {task.id}.",
+                            )
+
+                            requests.get(
+                                app.config["RUNNER_HOST"] + "/" + str(tsk.id),
+                                timeout=60,
+                            )
 
                 else:
                     RunnerLog(self.task, self.run_id, 8, "Sequence completed!")
