@@ -123,12 +123,17 @@ def send_task_to_runner(task_id: int) -> None:
     try:
         if task.project and task.project.sequence_tasks == 1:
             # only add job if its first in sequence
-            if (
-                Task.query.filter_by(project_id=task.project_id)
-                .filter_by(enabled=1)
-                .order_by(Task.order.asc(), Task.name.asc())  # type: ignore[union-attr]
+            first_sequence = (
+                db.session.scalars(
+                    db.select(Task)
+                    .filter_by(project_id=task.project_id, enabled=1)
+                    .order_by(Task.order.asc())
+                    .limit(1)
+                )
                 .first()
-            ).id == int(task_id):
+                .order
+            )
+            if first_sequence is not None and task.order == first_sequence:
                 requests.get(app.config["SCHEDULER_HOST"] + "/run/" + str(task.id), timeout=60)
 
                 log = TaskLog(
@@ -174,26 +179,18 @@ def sub_enable_task(task_id: int) -> None:
     # task only goes to scheduler if not sequence, or first in sequence.
     if task.project and task.project.sequence_tasks == 1:
         # only add job if its first in sequence
-        if Task.query.filter(
-            or_(  # type: ignore[type-var]
-                and_(Task.project_id == task.project_id, Task.enabled == 1),
-                Task.id == task_id,
+        first_sequence = (
+            db.session.scalars(
+                db.select(Task)
+                .filter_by(project_id=task.project_id, enabled=1)
+                .order_by(Task.order.asc())
+                .limit(1)
             )
-        ).order_by(
-            Task.order.asc(), Task.name.asc()  # type: ignore[union-attr]
-        ).first() is not None and (
-            Task.query.filter(
-                or_(  # type: ignore[type-var]
-                    and_(Task.project_id == task.project_id, Task.enabled == 1),
-                    Task.id == task_id,
-                )
-            )
-            .order_by(Task.order.asc(), Task.name.asc())  # type: ignore[union-attr]
             .first()
-        ).id == int(
-            task_id
-        ):
-            send_task_to_scheduler(task_id)
+            .order
+        )
+        if first_sequence is not None and task.order == first_sequence:
+            send_task_to_scheduler(task_id=task_id)
         else:
             # make sure it is not in the scheduler.
             requests.get(app.config["SCHEDULER_HOST"] + "/delete/" + str(task_id), timeout=60)
@@ -259,9 +256,17 @@ def run_project(project_list: List[int]) -> str:
     )
 
     if project.sequence_tasks == 1:
-
+        task_sequence = (
+            db.session.scalars(
+                db.select(Task)
+                .filter_by(project_id=project_id, enabled=1)
+                .order_by(Task.order.asc())
+                .limit(1)
+            )
+            .first()
+            .order
+        )
         # run all lowest level sequence tasks
-        task_sequence = tasks.first().order
         for task in tasks:
             if task.order == task_sequence:
                 send_task_to_runner(task.id)

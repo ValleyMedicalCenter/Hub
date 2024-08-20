@@ -174,14 +174,15 @@ class Runner:
         task.est_duration = (datetime.datetime.now() - task.last_run).total_seconds()
         # if this is a sequence job, trigger the next job.
         if task.project.sequence_tasks == 1:
-            task_id_list = [
-                x.id
-                for x in Task.query.filter_by(
-                    enabled=1, project_id=task.project_id, order=task.order + 1
+            task_id_list = (
+                db.session.execute(
+                    db.select(Task).filter_by(
+                        enabled=1, project_id=task.project_id, order=task.order + 1
+                    )
                 )
-                .order_by(Task.order.asc(), Task.name.asc())  # type: ignore[union-attr]
+                .scalars()
                 .all()
-            ]
+            )
 
             # check if any are still running in same order.
             runners = db.session.execute(
@@ -202,17 +203,18 @@ class Runner:
 
                 if task_id_list:
 
-                    RunnerLog(self.task, self.run_id, 8, " ".join(str(x) for x in task_id_list))
                     for parallel_id in task_id_list:
                         # trigger next tasks
                         RunnerLog(
                             self.task,
                             self.run_id,
                             8,
-                            f"Triggering run of next sequence job: {parallel_id}.",
+                            f"Triggering run of next sequence job: {parallel_id.id}.",
                         )
 
-                        next_task = Task.query.filter_by(id=parallel_id).first()
+                        next_task = db.session.scalars(
+                            db.select(Task).filter_by(id=parallel_id.id).limit(1)
+                        ).first()
 
                         RunnerLog(
                             next_task,
@@ -222,7 +224,7 @@ class Runner:
                         )
 
                         requests.get(
-                            app.config["RUNNER_HOST"] + "/" + str(parallel_id),
+                            app.config["RUNNER_HOST"] + "/" + str(parallel_id.id),
                             timeout=60,
                         )
 
