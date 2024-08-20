@@ -246,26 +246,20 @@ def enable_task(task_list: List[int]) -> str:
 def run_project(project_list: List[int]) -> str:
     """Running enabled project tasks."""
     project_id: int = project_list[0]
-    project = Project.query.filter_by(id=project_id).first()
-
-    tasks = db.session.execute(
-        db.select(Task)
-        .filter_by(project_id=project_id, enabled=1)
-        .order_by(Task.order.asc(), Task.name.asc())
+    project_sequence = (
+        db.session.execute(db.select(Project).filter_by(id=project_id).limit(1))
+        .scalars()
+        .first()
+        .sequence_tasks
     )
 
-    if project.sequence_tasks == 1:
-        task_sequence = (
-            db.session.execute(
-                db.select(Task)
-                .filter_by(project_id=project_id, enabled=1)
-                .order_by(Task.order.asc())
-                .limit(1)
-            )
-            .scalars()
-            .first()
-            .order
-        )
+    tasks = db.session.execute(
+        db.select(Task).filter_by(project_id=project_id, enabled=1).order_by(Task.order.asc())
+    )
+
+    if project_sequence == 1:
+        # get the order of the first result
+        task_sequence = tasks[0].order
 
         # run all lowest level sequence tasks
         for task in tasks:
