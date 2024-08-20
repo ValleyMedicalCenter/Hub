@@ -212,9 +212,13 @@ class Runner:
                             f"Triggering run of next sequence job: {parallel_id.id}.",
                         )
 
-                        next_task = db.session.scalars(
-                            db.select(Task).filter_by(id=parallel_id.id).limit(1)
-                        ).first()
+                        next_task = (
+                            db.session.execute(
+                                db.select(Task).filter_by(id=parallel_id.id).limit(1)
+                            )
+                            .scalars()
+                            .first()
+                        )
 
                         RunnerLog(
                             next_task,

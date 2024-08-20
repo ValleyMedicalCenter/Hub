@@ -115,21 +115,20 @@ def send_task_to_scheduler(task_id: int) -> None:
         raise ValueError("Failed to schedule, scheduler is offline.")
 
 
-def send_task_to_runner(task_id: int) -> None:
+def send_task_to_runner(task: Task) -> None:
     """Silently send task or raise an error."""
-    task = Task.query.filter_by(id=task_id).first()
-
     # task only runs if not sequence, or first in sequence.
     try:
         if task.project and task.project.sequence_tasks == 1:
             # only add job if its first in sequence
             first_sequence = (
-                db.session.scalars(
+                db.session.execute(
                     db.select(Task)
                     .filter_by(project_id=task.project_id, enabled=1)
                     .order_by(Task.order.asc())
                     .limit(1)
                 )
+                .scalars()
                 .first()
                 .order
             )
@@ -137,7 +136,7 @@ def send_task_to_runner(task_id: int) -> None:
                 requests.get(app.config["SCHEDULER_HOST"] + "/run/" + str(task.id), timeout=60)
 
                 log = TaskLog(
-                    task_id=task_id,
+                    task_id=task.id,
                     status_id=7,
                     message=(current_user.full_name or "none") + ": Task sent to runner.",
                 )
@@ -146,7 +145,7 @@ def send_task_to_runner(task_id: int) -> None:
 
             else:
                 log = TaskLog(
-                    task_id=task_id,
+                    task_id=task.id,
                     status_id=7,
                     message=(current_user.full_name or "none")
                     + ": Task not sent to runner - it is a sequence task that should not run first.",
@@ -160,7 +159,7 @@ def send_task_to_runner(task_id: int) -> None:
     except (requests.exceptions.ConnectionError, urllib3.exceptions.NewConnectionError):
         logging.error({"empty_msg": "Error - Scheduler offline."})
         log = TaskLog(
-            task_id=task_id,
+            task_id=task.id,
             status_id=7,
             error=1,
             message=(current_user.full_name or "none") + ": Failed to send task to runner.",
@@ -171,38 +170,38 @@ def send_task_to_runner(task_id: int) -> None:
         raise ValueError("Error - Scheduler offline.")
 
 
-def sub_enable_task(task_id: int) -> None:
+def sub_enable_task(task: Task) -> None:
     """Shared function for enabling a task."""
-    redis_client.delete("runner_" + str(task_id) + "_attempt")
-    task = Task.query.filter_by(id=task_id).first()
+    redis_client.delete("runner_" + str(task.id) + "_attempt")
 
     # task only goes to scheduler if not sequence, or first in sequence.
     if task.project and task.project.sequence_tasks == 1:
         # only add job if its first in sequence
         first_sequence = (
-            db.session.scalars(
+            db.session.execute(
                 db.select(Task)
                 .filter_by(project_id=task.project_id, enabled=1)
                 .order_by(Task.order.asc())
                 .limit(1)
             )
+            .scalars()
             .first()
             .order
         )
         if first_sequence is not None and task.order == first_sequence:
-            send_task_to_scheduler(task_id=task_id)
+            send_task_to_scheduler(task_id=task.id)
         else:
             # make sure it is not in the scheduler.
-            requests.get(app.config["SCHEDULER_HOST"] + "/delete/" + str(task_id), timeout=60)
+            requests.get(app.config["SCHEDULER_HOST"] + "/delete/" + str(task.id), timeout=60)
     else:
-        send_task_to_scheduler(task_id)
+        send_task_to_scheduler(task.id)
 
     # show as enabled only if we made it to scheduler
     task.enabled = 1
     db.session.commit()
 
     log = TaskLog(
-        task_id=task_id,
+        task_id=task.id,
         status_id=7,
         message=(current_user.full_name or "none") + ": Task enabled.",
     )
@@ -229,7 +228,7 @@ def enable_task(task_list: List[int]) -> str:
         )
         try:
             for task in tasks:
-                sub_enable_task(task.id)
+                sub_enable_task(task)
         # pylint: disable=W0703
         except BaseException as e:
             print(full_stack())  # noqa: T201
@@ -237,7 +236,7 @@ def enable_task(task_list: List[int]) -> str:
         return "Task added, sequence updated."
 
     try:
-        sub_enable_task(task_id)
+        sub_enable_task(task)
         return "Task added."
     # pylint: disable=W0703
     except BaseException as e:
@@ -257,19 +256,21 @@ def run_project(project_list: List[int]) -> str:
 
     if project.sequence_tasks == 1:
         task_sequence = (
-            db.session.scalars(
+            db.session.execute(
                 db.select(Task)
                 .filter_by(project_id=project_id, enabled=1)
                 .order_by(Task.order.asc())
                 .limit(1)
             )
+            .scalars()
             .first()
             .order
         )
+
         # run all lowest level sequence tasks
         for task in tasks:
             if task.order == task_sequence:
-                send_task_to_runner(task.id)
+                send_task_to_runner(task)
                 log = TaskLog(
                     task_id=task.id,
                     status_id=7,
@@ -280,7 +281,7 @@ def run_project(project_list: List[int]) -> str:
         return "Project sequence run started."
 
     for task in tasks:
-        send_task_to_runner(task.id)
+        send_task_to_runner(task)
         log = TaskLog(
             task_id=task.id,
             status_id=7,
@@ -343,7 +344,7 @@ def schedule_project(project_list: List[int]) -> str:
             db.session.commit()
 
         for task in tasks:
-            sub_enable_task(task.id)
+            sub_enable_task(task)
 
     # pylint: disable=broad-except
     except BaseException as e:
@@ -373,7 +374,7 @@ def enable_project(project_list: List[int]) -> str:
             db.session.commit()
 
         for task in tasks:
-            sub_enable_task(task.id)
+            sub_enable_task(task)
 
     # pylint: disable=broad-except
     except BaseException as e:
@@ -428,7 +429,7 @@ def disable_task(task_list: List[int]) -> str:
         if task.project and task.project.sequence_tasks == 1:
             # update sequence
             for task in Task.query.filter_by(project_id=task.project_id, enabled=1).all():
-                sub_enable_task(task.id)
+                sub_enable_task(task)
             return "Task disabled, sequence updated."
 
         return "Task disabled."
@@ -457,7 +458,7 @@ def schedule_enabled_tasks(*args: Any) -> str:
     """Sending enabled tasks to scheduler."""
     try:
         for task in Task.query.filter_by(enabled=1).all():
-            sub_enable_task(task.id)
+            sub_enable_task(task)
 
         return "Tasks sent to scheduler."
     # pylint: disable=W0703
@@ -471,7 +472,7 @@ def run_scheduled_tasks(*args: Any) -> None:
     tasks = Task.query.filter(enabled=1).all()
 
     for task in tasks:
-        send_task_to_runner(task.id)
+        send_task_to_runner(task)
 
 
 # pylint: disable=W0613
@@ -510,7 +511,7 @@ def run_errored_tasks(*args: Any) -> str:
     try:
         for task in tasks:
             if task.project.cron == 1 or task.project.intv == 1:
-                send_task_to_runner(task.id)
+                send_task_to_runner(task)
         return "Started running all errored tasks that have a schedule."
     except ValueError:
         return "Failed to run errored tasks, Scheduler is offline."
