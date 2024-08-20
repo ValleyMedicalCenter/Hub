@@ -135,7 +135,6 @@ def duplicate_task(task_id: int) -> Response:
         new_task.creator_id = current_user.id
         new_task.updater_id = current_user.id
         new_task.status_id = None
-        new_task.order = None
         new_task.name = str(my_task.name or "") + " - Duplicated"
 
         db.session.add(new_task)
@@ -153,7 +152,7 @@ def duplicate_task(task_id: int) -> Response:
                 db.session.add(new_param)
                 db.session.commit()
 
-        return redirect(url_for("task_bp.one_task", task_id=new_task.id))
+        return redirect(url_for("task_edit_bp.task_edit_get", task_id=new_task.id))
 
     flash("Task does not exist.")
     return redirect(url_for("task_bp.all_tasks"))
