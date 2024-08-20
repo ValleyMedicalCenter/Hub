@@ -253,8 +253,12 @@ def run_project(project_list: List[int]) -> str:
         .sequence_tasks
     )
 
-    tasks = db.session.execute(
-        db.select(Task).filter_by(project_id=project_id, enabled=1).order_by(Task.order.asc())
+    tasks = (
+        db.session.execute(
+            db.select(Task).filter_by(project_id=project_id, enabled=1).order_by(Task.order.asc())
+        )
+        .scalars()
+        .all()
     )
 
     if project_sequence == 1:
