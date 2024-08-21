@@ -22,7 +22,9 @@ def run_task(task_id: int) -> Response:
     task = Task.query.filter_by(id=task_id).first()
     redis_client.delete("runner_" + str(task_id) + "_attempt")
     if task:
-        if task.project.sequence_tasks == 1:
+        # if the task is a sequence and enabled
+        # then kick off all other tasks with same rank.
+        if task.project.sequence_tasks == 1 and task.enabled == 1:
             tasks = db.session.execute(
                 db.select(Task).filter_by(project_id=task.project_id, enabled=1, order=task.order)
             ).scalars()
