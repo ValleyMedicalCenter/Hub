@@ -202,34 +202,36 @@ class Runner:
             if (
                 db.session.execute(db.select(Task).filter_by(enabled=1, id=task.id)).scalar()
                 and not runners
+                and task_list
             ):
+                # get the next rank from the task_list.
+                task_sequence = task_list[0].order
 
-                if task_list:
-                    task_sequence = task_list[0].order
-                    for tsk in task_list:
-                        if tsk.order == task_sequence:
-                            # trigger next tasks
-                            RunnerLog(
-                                self.task,
-                                self.run_id,
-                                8,
-                                f"Triggering run of next sequence job: {tsk.id}.",
-                            )
+                # kick off all the tasks in task_list that match the next rank.
+                for tsk in task_list:
+                    if tsk.order == task_sequence:
+                        # trigger next tasks
+                        RunnerLog(
+                            self.task,
+                            self.run_id,
+                            8,
+                            f"Triggering run of next sequence job: {tsk.id}.",
+                        )
 
-                            RunnerLog(
-                                tsk,
-                                None,
-                                8,
-                                f"Run triggered by previous sequence job: {task.id}.",
-                            )
+                        RunnerLog(
+                            tsk,
+                            None,
+                            8,
+                            f"Run triggered by previous sequence job: {task.id}.",
+                        )
 
-                            requests.get(
-                                app.config["RUNNER_HOST"] + "/" + str(tsk.id),
-                                timeout=60,
-                            )
-
-                else:
-                    RunnerLog(self.task, self.run_id, 8, "Sequence completed!")
+                        requests.get(
+                            app.config["RUNNER_HOST"] + "/" + str(tsk.id),
+                            timeout=60,
+                        )
+            # if there isn't anything in task list, add log that sequence is completed.
+            elif not task_list:
+                RunnerLog(self.task, self.run_id, 8, "Sequence completed!")
 
         task.last_run_job_id = None
         task.last_run = datetime.datetime.now()

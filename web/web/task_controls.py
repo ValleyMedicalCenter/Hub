@@ -26,11 +26,11 @@ def run_task(task_id: int) -> Response:
             tasks = db.session.execute(
                 db.select(Task).filter_by(project_id=task.project_id, enabled=1, order=task.order)
             ).scalars()
-            for t in tasks:
+            for tsk in tasks:
                 try:
-                    requests.get(app.config["SCHEDULER_HOST"] + "/run/" + str(t.id), timeout=60)
+                    requests.get(app.config["SCHEDULER_HOST"] + "/run/" + str(tsk.id), timeout=60)
                     log = TaskLog(  # type: ignore[call-arg]
-                        task_id=t.id,
+                        task_id=tsk.id,
                         status_id=7,
                         message=(current_user.full_name or "none") + ": Task manually run.",
                     )
@@ -42,11 +42,11 @@ def run_task(task_id: int) -> Response:
                     log = TaskLog(  # type: ignore[call-arg]
                         status_id=7,
                         error=1,
-                        task_id=t.id,
+                        task_id=tsk.id,
                         message=(
                             (current_user.full_name or "none")
                             + ": Failed to manually run task. ("
-                            + str(t.id)
+                            + str(tsk.id)
                             + ")\n"
                             + str(e)
                         ),
