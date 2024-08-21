@@ -216,14 +216,8 @@ class Runner:
                                 f"Triggering run of next sequence job: {tsk.id}.",
                             )
 
-                            next_task = (
-                                db.session.execute(db.select(Task).filter_by(id=tsk.id).limit(1))
-                                .scalars()
-                                .first()
-                            )
-
                             RunnerLog(
-                                next_task,
+                                tsk,
                                 None,
                                 8,
                                 f"Run triggered by previous sequence job: {task.id}.",
