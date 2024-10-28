@@ -142,7 +142,7 @@ tomli = "^2.0.2"
 tomlkit = "^0.13.2"
 virtualenv = "^20.27.0"
 webassets-rollup = "^1.0.0"
-whitenoise = "^6.7.0"
+whitenoise = "^6.8.1"
 xmlsec = "^1.3.14"
 
 [tool.poetry.group.dev.dependencies]
