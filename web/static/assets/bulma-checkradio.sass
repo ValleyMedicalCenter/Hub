@@ -1,3 +1,5 @@
+@use "sass:color"
+@use "sass:list"
 @use "sass:math"
 @use "../../../node_modules/bulma/sass/utilities" as ut
 
@@ -190,7 +192,7 @@ $checkradio-top-offset: 0rem !default
       padding-right: .75em
     &:hover:not([disabled])
       + label
-        background: darken($checkbox-block-background, 5%)
+        background: color.adjust($checkbox-block-background, $lightness: -5%)
 
 .is-checkradio[type="checkbox"]
   + label
@@ -224,9 +226,9 @@ $checkradio-top-offset: 0rem !default
 
 
   @each $name, $pair in ut.$colors
-    @if length($name) > 1
-      $color: nth($pair, 1)
-      $color-invert: nth($pair, 2)
+    @if list.length($name) > 1
+      $color: list.nth($pair, 1)
+      $color-invert: list.nth($pair, 2)
       &.is-#{$name}
         &.has-background-color
           + label
@@ -272,12 +274,12 @@ $checkradio-top-offset: 0rem !default
                 border-color: $color-invert !important
             &:hover:not([disabled])
               + label
-                background: darken($color, 5%)
+                background: color.adjust($color, $lightness: -5%)
                 &::after,
                 &:after,
                 &::before,
                 &:before
-                  border-color: darken($color-invert, 5%) !important
+                  border-color: color.adjust($color-invert, $lightness: -5%) !important
 
   &:indeterminate
     + label
@@ -287,9 +289,9 @@ $checkradio-top-offset: 0rem !default
         transform: rotate(90deg)
         border-bottom: none
     @each $name, $pair in ut.$colors
-      @if length($name) > 1
-        $color: nth($pair, 1)
-        $color-invert: nth($pair, 2)
+      @if list.length($name) > 1
+        $color: list.nth($pair, 1)
+        $color-invert: list.nth($pair, 2)
         &.is-#{$name}
           + label
             &::after,
@@ -337,9 +339,9 @@ $checkradio-top-offset: 0rem !default
     +radio-size(ut.$size-large)
 
   @each $name, $pair in ut.$colors
-    @if length($name) > 1
-      $color: nth($pair, 1)
-      $color-invert: nth($pair, 2)
+    @if list.length($name) > 1
+      $color: list.nth($pair, 1)
+      $color-invert: list.nth($pair, 2)
       &.is-#{$name}
         &.has-background-color
           + label

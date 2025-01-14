@@ -1,3 +1,4 @@
+@use "sass:math"
 @use "sass:list"
 @use "../../../node_modules/bulma/sass/utilities/controls"
 @use "../../../node_modules/bulma/sass/utilities/derived-variables"
@@ -173,7 +174,7 @@ $switch-focus: 1px dotted initial-variables.$grey-light !default
 		+switch-size(derived-variables.$size-large)
 
 	@each $name, $pair in derived-variables.$colors
-		@if length($name) > 1
+		@if list.length($name) > 1
 			$color: list.nth($pair, 1)
 			$color-invert: list.nth($pair, 2)
 			&.is-#{$name}
@@ -229,8 +230,8 @@ $switch-focus: 1px dotted initial-variables.$grey-light !default
 
 @function divide($dividend, $divisor, $precision: 10)
 	$sign: if($dividend > 0 and $divisor > 0, 1, -1)
-	$dividend: abs($dividend)
-	$divisor: abs($divisor)
+	$dividend: math.abs($dividend)
+	$divisor: math.abs($divisor)
 	$quotient: 0
 	$remainder: $dividend
 	@if $dividend == 0

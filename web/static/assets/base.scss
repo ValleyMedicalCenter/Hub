@@ -24,19 +24,19 @@
 // Import the themes so that all CSS variables have a value
 @use '../../../node_modules/bulma/sass/themes';
 
-@import 'bulma-switch';
-@import 'bulma-tooltip';
-@import 'bulma-checkradio';
+@use 'bulma-switch';
+@use 'bulma-tooltip';
+@use 'bulma-checkradio';
 /* purgecss start ignore */
-@import '../fonts/fontawesome/stylesheet';
-@import '../lib/codemirror/codemirror';
-@import '../lib/codemirror/ttcn';
-@import '../lib/codemirror/simplescrollbars';
-@import '../lib/scroll/scroll';
-@import '../lib/prism/prism';
-@import '../lib/table/table';
-@import '../lib/prism/prism_line_numbers';
-@import '../lib/flatpickr/flatpickr';
+@use '../fonts/fontawesome/stylesheet';
+@use '../lib/codemirror/codemirror';
+@use '../lib/codemirror/ttcn';
+@use '../lib/codemirror/simplescrollbars';
+@use '../lib/scroll/scroll';
+@use '../lib/prism/prism';
+@use '../lib/table/table';
+@use '../lib/prism/prism_line_numbers';
+@use '../lib/flatpickr/flatpickr';
 
 @include Inter.faces(
   $family: 'Inter',
