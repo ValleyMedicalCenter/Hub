@@ -48,9 +48,9 @@ class CronValidator:
         cron schedule.
         The second if statement is validation of each cron element.
         """
-        if (self.cron == 1 and self.cron_year == None and self.cron_month == None and
-            self.cron_day == None and self.cron_week_day == None and self.cron_hour == None and
-            self.cron_min == None and self.cron_sec == None):
+        if (self.cron == 1 and self.cron_year == "" and self.cron_month == "" and
+            self.cron_day == "" and self.cron_week_day == "" and self.cron_hour == "" and
+            self.cron_min == "" and self.cron_sec == ""):
             msg = f"At least one schedule element must be populated"
             raise ValueError(msg)
         
