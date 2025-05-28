@@ -725,7 +725,13 @@ class Runner:
                 )
 
     def __store_files(self) -> None:
-        if not self.source_files or len(self.source_files) == 0:
+        # if file_type is none. We don't need to save it.
+        # it there are no source files nothing to return also.
+        if (
+            not self.source_files
+            or len(self.source_files) == 0
+            or self.task.destination_file_type != 5
+        ):
             return
 
         RunnerLog(
@@ -745,8 +751,8 @@ class Runner:
             # get new parameters just in case it was changed in the processing script.
             params = ParamLoader(self.task, self.run_id)
 
-            # get file name. if no name specified in task setting, then use temp name.
             try:
+
                 file_name, file_path, file_hash = File(
                     task=self.task,
                     run_id=self.run_id,
