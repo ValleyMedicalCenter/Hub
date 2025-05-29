@@ -158,7 +158,8 @@ class Runner:
                 )
 
         # store output
-        self.__store_files()
+        if self.task.destination_file_type_id != 5:
+            self.__store_files()
 
         # send confirmation/error emails
         self.__send_email()
@@ -727,11 +728,7 @@ class Runner:
     def __store_files(self) -> None:
         # if file_type is none. We don't need to save it.
         # it there are no source files nothing to return also.
-        if (
-            not self.source_files
-            or len(self.source_files) == 0
-            or self.task.destination_file_type != 5
-        ):
+        if not self.source_files or len(self.source_files) == 0:
             return
 
         RunnerLog(
