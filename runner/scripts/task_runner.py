@@ -158,6 +158,7 @@ class Runner:
                 )
 
         # store output
+        # if file_type is none. We don't need to store files.
         if self.task.destination_file_type_id != 5:
             self.__store_files()
 
@@ -726,8 +727,7 @@ class Runner:
                 )
 
     def __store_files(self) -> None:
-        # if file_type is none. We don't need to save it.
-        # it there are no source files nothing to return also.
+        # it there are no source files nothing to store.
         if not self.source_files or len(self.source_files) == 0:
             return
 
