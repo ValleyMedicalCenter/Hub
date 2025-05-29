@@ -14,54 +14,59 @@
             </select>
         </div>
     </div>
-    <div class="field">
-        <label class="label" data-docs="parameters">File Name</label>
-        <label class="label has-text-weight-normal">
-            <small>
-                If file type is "other" then include file extension in name.
-                <br />
-                <span class="has-tooltip has-tooltip-arrow has-tooltip-multiline" data-tooltip="{% include "/sections/py_dates.html.j2" %}
-                     ">
-                    Wildcards and
-                    <a target="_blank" rel="noopener" href="https://strftime.org">strftime patterns</a>
-                    can be used in filenames.
-                </span>
-            </small>
-        </label>
-        <div class="control">
-            <input class="input"
-                   name="destinationFileName"
-                   autocomplete="off"
-                   value="{{ t.destination_file_name }}" />
-        </div>
-    </div>
-    <div class="task-delimiter block"
-         {% if not t or (t and t.destination_file_type_id != 2 and t.destination_file_type_id != 4) %}
-             style="display:none"
-         {% endif %}>
+    <div class="File-information block"
+        {% if t.destination_file_type_id == 5 %}
+            style="display:none"
+        {% endif %}>
         <div class="field">
-            <label class="label">File Delimiter (defaults to comma)</label>
-            <input class="input"
-                   name="fileDelimiter"
-                   autocomplete="off"
-                   value="{{ t.destination_file_delimiter or ',' }}" />
+            <label class="label" data-docs="parameters">File Name</label>
+            <label class="label has-text-weight-normal">
+                <small>
+                    If file type is "other" then include file extension in name.
+                    <br />
+                    <span class="has-tooltip has-tooltip-arrow has-tooltip-multiline" data-tooltip="{% include "/sections/py_dates.html.j2" %}
+                        ">
+                        Wildcards and
+                        <a target="_blank" rel="noopener" href="https://strftime.org">strftime patterns</a>
+                        can be used in filenames.
+                    </span>
+                </small>
+            </label>
+            <div class="control">
+                <input class="input"
+                    name="destinationFileName"
+                    autocomplete="off"
+                    value="{{ t.destination_file_name }}" />
+            </div>
         </div>
-        <div class="field">
-            <input class="is-checkradio is-info"
-                   id="task_ignore_file_delimiter"
-                   type="checkbox"
-                   {% if t and t.destination_ignore_delimiter == 1 %}checked="checked"{% endif %} />
-            <label for="task_ignore_file_delimiter">Ignore Delimiter?</label>
-            <input type="hidden"
-                   name="task_ignore_file_delimiter"
-                   value="{%- if t and t.destination_ignore_delimiter == 1 -%} 1 {%- else -%} 0 {%- endif -%}" />
-        </div>
-        <div class="field">
-            <label class="label">Line End Appending (defaults to "", normally this is not used. ex: ~)</label>
-            <input class="input"
-                   name="fileTerminator"
-                   autocomplete="off"
-                   value="{{ t.destination_file_line_terminator or '' }}" />
+        <div class="task-delimiter block"
+            {% if not t or (t and t.destination_file_type_id != 2 and t.destination_file_type_id != 4) %}
+                style="display:none"
+            {% endif %}>
+            <div class="field">
+                <label class="label">File Delimiter (defaults to comma)</label>
+                <input class="input"
+                    name="fileDelimiter"
+                    autocomplete="off"
+                    value="{{ t.destination_file_delimiter or ',' }}" />
+            </div>
+            <div class="field">
+                <input class="is-checkradio is-info"
+                    id="task_ignore_file_delimiter"
+                    type="checkbox"
+                    {% if t and t.destination_ignore_delimiter == 1 %}checked="checked"{% endif %} />
+                <label for="task_ignore_file_delimiter">Ignore Delimiter?</label>
+                <input type="hidden"
+                    name="task_ignore_file_delimiter"
+                    value="{%- if t and t.destination_ignore_delimiter == 1 -%} 1 {%- else -%} 0 {%- endif -%}" />
+            </div>
+            <div class="field">
+                <label class="label">Line End Appending (defaults to "", normally this is not used. ex: ~)</label>
+                <input class="input"
+                    name="fileTerminator"
+                    autocomplete="off"
+                    value="{{ t.destination_file_line_terminator or '' }}" />
+            </div>
         </div>
     </div>
     <div class="field">
