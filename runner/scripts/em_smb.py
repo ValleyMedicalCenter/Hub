@@ -1,17 +1,13 @@
 """SMB Connection Manager."""
 
-import csv
 import fnmatch
-import os
 import pickle
-import tempfile
-from io import TextIOWrapper
 from pathlib import Path
-from typing import IO, Any, Dict, Generator, List, Optional
+from typing import IO, Any, Dict, List, Optional
 
 from flask import current_app as app
 from pathvalidate import sanitize_filename
-from smbclient import makedirs, open_file, register_session, walk
+from smbclient import makedirs, register_session, walk
 from smbclient.path import exists, getsize
 from smbclient.shutil import copyfile
 from smbprotocol.exceptions import LogonFailure, SMBException
@@ -55,7 +51,11 @@ def connect(username: str, password: str, server_name: str) -> Session:
             redis_client.set(
                 redis_key,
                 pickle.dumps(
-                    {"server_name": server_name, "username": username, "password": password}
+                    {
+                        "server_name": server_name,
+                        "username": username,
+                        "password": password,
+                    }
                 ),
             )
 
@@ -138,48 +138,25 @@ class Smb:
         except ValueError as e:
             raise RunnerException(self.task, self.run_id, 10, str(e))
 
-    def __load_file(self, file_name: str, index: int, length: int) -> IO[Any]:
+    def __load_file(self, full_path: str, index: int, length: int) -> IO[Any]:
+        """Copy a file from a smb drive to a local path.
 
-        original_name = Path(file_name).name
-        RunnerLog(self.task, self.run_id, 10, f"({index} of {length}) downloading {original_name}")
+        :param full_path: the full UNC path to the file.
+        :param index: the file number that is being downloaded.
+        :param length: the amount of files being downloaded.
+        """
+        original_name = Path(full_path).name
+        local_path = str(Path(self.dir).joinpath(original_name))
+        RunnerLog(
+            self.task,
+            self.run_id,
+            10,
+            f"({index} of {length}) downloading {original_name}",
+        )
+        copyfile(f"\\\\{full_path}", local_path)
 
-        open_file_for_read = open_file(file_name, "rb")
-
-        def load_data(file_obj: TextIOWrapper) -> Generator:
-            with file_obj as this_file:
-                while True:
-                    data = this_file.read(1024)
-                    if not data:
-                        break
-                    yield data
-
-        # send back contents
-
-        with tempfile.NamedTemporaryFile(mode="wb+", delete=False, dir=self.dir) as data_file:
-            for data in load_data(open_file_for_read):
-                if self.task.source_smb_ignore_delimiter != 1 and self.task.source_smb_delimiter:
-                    my_delimiter = self.task.source_smb_delimiter or ","
-
-                    csv_reader = csv.reader(
-                        data.splitlines(),
-                        delimiter=my_delimiter,
-                    )
-                    writer = csv.writer(data_file)
-                    writer.writerows(csv_reader)
-
-                else:
-                    data_file.write(data)
-
-            if os.path.islink(original_name):
-                os.unlink(original_name)
-            elif os.path.isfile(original_name):
-                os.remove(original_name)
-            os.link(data_file.name, original_name)
-            data_file.name = original_name  # type: ignore[misc]
-
-        open_file_for_read.close()
-
-        return data_file
+        # return the file IO using open
+        return open(local_path, "rb")
 
     def read(self, file_name: str) -> List[IO[str]]:
         """Read file contents of network file path.
@@ -188,19 +165,32 @@ class Smb:
 
         Returns a path or raises an exception.
         """
+        # get full path
+        # if the connection is none, then the file_name has the full path.
+        if self.connection is not None:
+            # lets get the full path and checking if the file_name already has the connection.path in it.
+            # this is for older tasks where we had to include the path even though it was already in the connection.
+            base = Path(self.server_name or "") / self.share_name or ""
+            conn_path = Path(self.connection.path or "")
+            if conn_path and conn_path in Path(file_name).parents:
+                file_path = str(base / Path(file_name))
+            else:
+                file_path = str(base / conn_path / Path(file_name))
+        else:
+            file_path = file_name
+
         try:
             # if there is a wildcard in the filename
             if "*" in file_name:
                 RunnerLog(self.task, self.run_id, 10, "Searching for matching files...")
 
-                # a smb file name can be a path, but listpath
-                # will only list current folder.
-                # we need to split the filename path and iter
-                # through the folders that match.
+                # we need to split the file path from a * to get a base path
+                # this will be passed into walk funcion
+                # walk will generate file names in a directory and everything below it.
 
                 # get the path up to the *.
-                base_dir = str(Path(file_name.split("*")[0]).parent)
-
+                base_dir = f"\\\\{file_path.split('*')[0]}"
+                file_name = str(Path(file_path).name)
                 file_list = []
                 for path, _, walk_file_list in walk(base_dir):
                     for this_file in walk_file_list:
@@ -221,11 +211,11 @@ class Smb:
 
                 # if a file was found, try to open.
                 return [
-                    self.__load_file(file_name, i, len(file_list))
+                    self.__load_file(full_path=file_path, index=i, length=len(file_list))
                     for i, file_name in enumerate(file_list, 1)
                 ]
 
-            return [self.__load_file(file_name, 1, 1)]
+            return [self.__load_file(full_path=file_path, index=1, length=1)]
         except BaseException as e:
             raise RunnerException(
                 self.task,
@@ -240,8 +230,8 @@ class Smb:
         try:
             if self.connection is not None:
                 dest_path = str(
-                    Path(self.connection.server_name or "")
-                    / Path(self.connection.share_name or "")
+                    Path(self.server_name or "")
+                    / Path(self.share_name or "")
                     / Path(self.connection.path or "").joinpath(file_name)
                 )
             else:
@@ -272,7 +262,10 @@ class Smb:
                 makedirs(my_dir, exist_ok=True)
             except (OSError, SMBException) as e:
                 raise RunnerException(
-                    self.task, self.run_id, 10, f"Failed to create SMB directory: {my_dir}\n{e}"
+                    self.task,
+                    self.run_id,
+                    10,
+                    f"Failed to create SMB directory: {my_dir}\n{e}",
                 )
 
             if overwrite != 1 and exists(smb_path):
@@ -290,11 +283,17 @@ class Smb:
                 raise RunnerException(self.task, self.run_id, 10, f"Source file not found: {e}")
             except PermissionError as e:
                 raise RunnerException(
-                    self.task, self.run_id, 10, f"Permission denied while copying file: {e}"
+                    self.task,
+                    self.run_id,
+                    10,
+                    f"Permission denied while copying file: {e}",
                 )
             except Exception as e:
                 raise RunnerException(
-                    self.task, self.run_id, 10, f"Unexpected error during file copy: {e}"
+                    self.task,
+                    self.run_id,
+                    10,
+                    f"Unexpected error during file copy: {e}",
                 )
             uploaded_size = getsize(smb_path)
 
