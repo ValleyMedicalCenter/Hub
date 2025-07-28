@@ -7,10 +7,15 @@ from typing import IO, Any, Dict, List, Optional
 
 from flask import current_app as app
 from pathvalidate import sanitize_filename
-from smbclient import makedirs, register_session, walk
+from smbclient import ClientConfig, makedirs, register_session, walk
 from smbclient.path import exists, getsize
 from smbclient.shutil import copyfile
-from smbprotocol.exceptions import LogonFailure, SMBException
+from smbprotocol.exceptions import (
+    LogonFailure,
+    SMBAuthenticationError,
+    SMBException,
+    SMBResponseException,
+)
 from smbprotocol.session import Session
 
 from runner import redis_client
@@ -118,6 +123,11 @@ class Smb:
             self.server_name = app.config["SMB_SERVER_NAME"]
             self.subfolder = app.config.get("SMB_SUBFOLDER")
 
+        # set global username and password if connection drops.
+        ClientConfig(
+            username=app.config["SMB_USERNAME"],
+            password=em_decrypt(app.config["SMB_PASSWORD"], app.config["PASS_KEY"]),
+        )
         self.conn = self.__connect()
 
     def __connect(self) -> Session:
@@ -260,7 +270,7 @@ class Smb:
             # makedirs will create the folders. If parent doesn't exist, it will create that also.
             try:
                 makedirs(my_dir, exist_ok=True)
-            except (OSError, SMBException) as e:
+            except (OSError, SMBException, SMBResponseException, SMBAuthenticationError) as e:
                 raise RunnerException(
                     self.task,
                     self.run_id,

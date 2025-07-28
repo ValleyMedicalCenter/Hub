@@ -40,9 +40,7 @@ from runner.scripts.em_sqlserver import SqlServer
 from runner.scripts.em_ssh import Ssh
 from runner.scripts.em_system import system_monitor
 from runner.web.filters import datetime_format
-
-sys.path.append(str(Path(__file__).parents[2]) + "/scripts")
-from crypto import em_decrypt
+from scripts.crypto import em_decrypt
 
 env = Environment(
     loader=PackageLoader("runner", "templates"),
