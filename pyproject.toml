@@ -88,7 +88,7 @@ packages = [
 ]
 readme = "readme.md"
 repository = "https://github.com/atlas-bi/Hub"
-version = "3.1.1"
+version = "3.5.0"
 
 [tool.poetry.dependencies]
 Flask = "^3.1.1"
@@ -104,7 +104,7 @@ Flask-SQLAlchemy = "^3.1.1"
 Flask-Script = "^2.0.6"
 Flask-session = "^0.8.0"
 Jinja2 = "^3.1.6"
-SQLAlchemy = "^2.0.41"
+SQLAlchemy = "^2.0.42"
 SQLAlchemy-Utils = "^0.41.2"
 azure-devops = "^7.1.0b4"
 bs4 = "^0.0.2"

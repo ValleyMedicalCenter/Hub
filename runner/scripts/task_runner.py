@@ -746,6 +746,11 @@ class Runner:
             # get new parameters just in case it was changed in the processing script.
             params = ParamLoader(self.task, self.run_id)
 
+            # rename the file so it will save off all the files
+            if self.task.destination_file_name and len(self.source_files) > 1:
+                self.task.destination_file_name = (
+                    f"{Path(this_file.name).stem}_{file_counter}{Path(this_file.name).suffix}"
+                )
             # get file name. if no name specified in task setting, then use temp name.
             try:
                 file_name, file_path, file_hash = File(

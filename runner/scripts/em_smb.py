@@ -1,13 +1,21 @@
 """SMB Connection Manager."""
 
 import fnmatch
+import os
 import pickle
+import tempfile
 from pathlib import Path
 from typing import IO, Any, Dict, List, Optional
 
 from flask import current_app as app
 from pathvalidate import sanitize_filename
-from smbclient import ClientConfig, makedirs, register_session, walk
+from smbclient import (
+    ClientConfig,
+    makedirs,
+    register_session,
+    reset_connection_cache,
+    walk,
+)
 from smbclient.path import exists, getsize
 from smbclient.shutil import copyfile
 from smbprotocol.exceptions import (
@@ -47,6 +55,7 @@ def connect(username: str, password: str, server_name: str) -> Session:
 
     def build_connect() -> Session:
         try:
+            reset_connection_cache()
             conn = register_session(
                 server=server_name,
                 username=username,
@@ -165,8 +174,16 @@ class Smb:
         )
         copyfile(f"\\\\{full_path}", local_path)
 
-        # return the file IO using open
-        return open(local_path, "rb")
+        # need to return a file object to be used in em_file steps.
+        # grabs the local file, writes it to a temp file then renames it to the original name
+        with open(local_path, "rb") as original, tempfile.NamedTemporaryFile(
+            mode="wb", delete=False, dir=self.dir
+        ) as data_file:
+            data_file.write(original.read())
+        os.remove(local_path)
+        os.rename(data_file.name, local_path)
+        data_file.name = local_path
+        return data_file
 
     def read(self, file_name: str) -> List[IO[str]]:
         """Read file contents of network file path.
@@ -221,7 +238,7 @@ class Smb:
 
                 # if a file was found, try to open.
                 return [
-                    self.__load_file(full_path=file_path, index=i, length=len(file_list))
+                    self.__load_file(full_path=file_name, index=i, length=len(file_list))
                     for i, file_name in enumerate(file_list, 1)
                 ]
 
@@ -288,6 +305,7 @@ class Smb:
                 return smb_path
 
             try:
+
                 copyfile(self.dir.joinpath(file_name), smb_path)
             except FileNotFoundError as e:
                 raise RunnerException(self.task, self.run_id, 10, f"Source file not found: {e}")
