@@ -11,17 +11,19 @@ from flask import current_app as app
 from pathvalidate import sanitize_filename
 from smbclient import (
     ClientConfig,
+    listdir,
     makedirs,
     register_session,
     reset_connection_cache,
     walk,
 )
-from smbclient.path import exists, getsize
+from smbclient.path import getsize
 from smbclient.shutil import copyfile
 from smbprotocol.exceptions import (
     LogonFailure,
     SMBAuthenticationError,
     SMBException,
+    SMBOSError,
     SMBResponseException,
 )
 from smbprotocol.session import Session
@@ -185,6 +187,25 @@ class Smb:
         data_file.name = local_path
         return data_file
 
+    def __smb_file_exists(self, smb_path: str) -> bool:
+        """
+        Check if a file exists on an SMB share.
+
+        This is a replacement for exists function.
+        Exists was failing on some servers.
+        """
+        try:
+            dir_path = Path(smb_path).parent
+            file_name = Path(smb_path).name
+            return file_name in listdir(dir_path)
+        except SMBOSError as e:
+            raise RunnerException(
+                self.task,
+                self.run_id,
+                10,
+                f"Failed to check if file exists.\n{e}",
+            )
+
     def read(self, file_name: str) -> List[IO[str]]:
         """Read file contents of network file path.
 
@@ -255,17 +276,15 @@ class Smb:
     def save(self, overwrite: int, file_name: str) -> str:  # type: ignore[return]
         """Load data into network file path, creating location if not existing."""
         try:
+            base_path = Path(sanitize_filename(self.server_name or "")) / Path(
+                sanitize_filename(self.share_name or "")
+            )
             if self.connection is not None:
-                dest_path = str(
-                    Path(self.server_name or "")
-                    / Path(self.share_name or "")
-                    / Path(self.connection.path or "").joinpath(file_name)
-                )
+                dest_path = str(base_path / Path(self.connection.path or "").joinpath(file_name))
             else:
                 dest_path = str(
                     Path(
-                        Path(sanitize_filename(self.server_name or ""))
-                        / Path(sanitize_filename(self.share_name or ""))
+                        base_path
                         / (
                             Path(
                                 Path(sanitize_filename(self.subfolder or ""))
@@ -295,7 +314,7 @@ class Smb:
                     f"Failed to create SMB directory: {my_dir}\n{e}",
                 )
 
-            if overwrite != 1 and exists(smb_path):
+            if overwrite != 1 and self.__smb_file_exists(smb_path):
                 RunnerLog(
                     self.task,
                     self.run_id,
