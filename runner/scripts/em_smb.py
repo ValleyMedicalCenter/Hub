@@ -14,7 +14,6 @@ from smbclient import (
     listdir,
     makedirs,
     register_session,
-    reset_connection_cache,
     walk,
 )
 from smbclient.path import getsize
@@ -38,7 +37,7 @@ from scripts.crypto import em_decrypt
 def connection_json(connection: Session) -> Dict:
     """Convert the connection string to json."""
     return {
-        "server_name": connection.connection.server_name,
+        "server_name": connection.server_name,
         "password": em_decrypt(connection.password, app.config["PASS_KEY"]),
         "username": str(connection.username),
     }
@@ -57,11 +56,11 @@ def connect(username: str, password: str, server_name: str) -> Session:
 
     def build_connect() -> Session:
         try:
-            reset_connection_cache()
             conn = register_session(
                 server=server_name,
                 username=username,
                 password=em_decrypt(password, app.config["PASS_KEY"]),
+                connection_cache={},
             )
 
             redis_client.set(
@@ -174,7 +173,7 @@ class Smb:
             10,
             f"({index} of {length}) downloading {original_name}",
         )
-        copyfile(f"\\\\{full_path}", local_path)
+        copyfile(f"\\\\{full_path}", local_path, connection_cache={})
 
         # need to return a file object to be used in em_file steps.
         # grabs the local file, writes it to a temp file then renames it to the original name
@@ -197,7 +196,7 @@ class Smb:
         try:
             dir_path = Path(smb_path).parent
             file_name = Path(smb_path).name
-            return file_name in listdir(dir_path)
+            return file_name in listdir(dir_path, connection_cache={})
         except SMBOSError as e:
             raise RunnerException(
                 self.task,
@@ -218,12 +217,17 @@ class Smb:
         if self.connection is not None:
             # lets get the full path and checking if the file_name already has the connection.path in it.
             # this is for older tasks where we had to include the path even though it was already in the connection.
-            base = Path(self.server_name or "") / self.share_name or ""
-            conn_path = Path(self.connection.path or "")
-            if conn_path and conn_path in Path(file_name).parents:
-                file_path = str(base / Path(file_name))
+            base = Path(sanitize_filename(self.server_name or "")) / Path(
+                sanitize_filename(self.share_name or "")
+            )
+            file_name_path = (
+                file_name.split("*")[0].strip("/") if "*" in file_name else file_name.strip("/")
+            )
+            conn_path = Path((self.connection.path or "").strip("/"))
+            if conn_path and conn_path in Path(file_name_path).parents:
+                file_path = str(base / Path(file_name.strip("/")))
             else:
-                file_path = str(base / conn_path / Path(file_name))
+                file_path = str(base / conn_path / Path(file_name.strip("/")))
         else:
             file_path = file_name
 
@@ -237,10 +241,10 @@ class Smb:
                 # walk will generate file names in a directory and everything below it.
 
                 # get the path up to the *.
-                base_dir = f"\\\\{file_path.split('*')[0]}"
+                base_dir = f"\\\\{Path(file_path.split('*')[0]).parent}"
                 file_name = str(Path(file_path).name)
                 file_list = []
-                for path, _, walk_file_list in walk(base_dir):
+                for path, _, walk_file_list in walk(base_dir, connection_cache={}):
                     for this_file in walk_file_list:
                         if fnmatch.fnmatch(this_file, file_name):
                             file_list.append(str(Path(path).joinpath(this_file)))
@@ -305,7 +309,7 @@ class Smb:
 
             # makedirs will create the folders. If parent doesn't exist, it will create that also.
             try:
-                makedirs(my_dir, exist_ok=True)
+                makedirs(my_dir, exist_ok=True, connection_cache={})
             except (OSError, SMBException, SMBResponseException, SMBAuthenticationError) as e:
                 raise RunnerException(
                     self.task,
@@ -325,7 +329,7 @@ class Smb:
 
             try:
 
-                copyfile(self.dir.joinpath(file_name), smb_path)
+                copyfile(self.dir.joinpath(file_name), smb_path, connection_cache={})
             except FileNotFoundError as e:
                 raise RunnerException(self.task, self.run_id, 10, f"Source file not found: {e}")
             except PermissionError as e:
