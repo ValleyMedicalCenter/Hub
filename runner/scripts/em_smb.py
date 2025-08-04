@@ -1,4 +1,8 @@
-"""SMB Connection Manager."""
+"""SMB Connection Manager.
+
+This module provides a class `Smb` to manage SMB file transfers,
+and helper functions to handle connection caching and restoration via Redis.
+"""
 
 import fnmatch
 import os
@@ -46,11 +50,7 @@ def connection_json(connection: Session) -> Dict:
 def connect(username: str, password: str, server_name: str) -> Session:
     """Connect to SMB server.
 
-    After making a connection we save it to redis. Next time we need a connection
-    we can grab if from redis and attempt to use. If it is no longer connected
-    then reconnect.
-
-    Because we want to use existing connection we will not close them...
+    Stores connection info in Redis so future sessions can reuse existing ones.
     """
     redis_key = f"smb_session_{server_name}"
 
@@ -102,8 +102,8 @@ def connect(username: str, password: str, server_name: str) -> Session:
 class Smb:
     """SMB Connection Handler Class.
 
-    smb.read = returns contents of a network file
-    smb.save = save contents of local file to network file
+    Provides methods to read files from and write files to SMB shares.
+    Handles wildcard reads, path generation, and connection reuse.
     """
 
     def __init__(
@@ -113,12 +113,11 @@ class Smb:
         connection: Optional[ConnectionSmb],
         directory: Path,
     ):
-        """Set up class parameters."""
-        # pylint: disable=too-many-arguments
+        """Initialize the SMB class with task, run ID, connection, and working directory."""
         self.task = task
         self.run_id = run_id
         self.connection = connection
-        self.dir = directory
+        self.local_temp_dir = directory
 
         if self.connection is not None:
             self.share_name = str(self.connection.share_name).strip("/").strip("\\")
@@ -131,9 +130,9 @@ class Smb:
             self.username = app.config["SMB_USERNAME"]
             self.password = app.config["SMB_PASSWORD"]
             self.server_name = app.config["SMB_SERVER_NAME"]
-            self.subfolder = app.config.get("SMB_SUBFOLDER")
+            self.subfolder = app.config["SMB_SUBFOLDER"]
 
-        # set global username and password if connection drops.
+        # set global username and password. It sets default just in case username and pw is missing.
         ClientConfig(
             username=app.config["SMB_USERNAME"],
             password=em_decrypt(app.config["SMB_PASSWORD"], app.config["PASS_KEY"]),
@@ -158,7 +157,7 @@ class Smb:
         except ValueError as e:
             raise RunnerException(self.task, self.run_id, 10, str(e))
 
-    def __load_file(self, full_path: str, index: int, length: int) -> IO[Any]:
+    def __load_file(self, full_path: str, index: int, length: int) -> IO[bytes]:
         """Copy a file from a smb drive to a local path.
 
         :param full_path: the full UNC path to the file.
@@ -166,33 +165,30 @@ class Smb:
         :param length: the amount of files being downloaded.
         """
         original_name = Path(full_path).name
-        local_path = str(Path(self.dir).joinpath(original_name))
+        local_path = Path(self.local_temp_dir) / original_name
         RunnerLog(
             self.task,
             self.run_id,
             10,
             f"({index} of {length}) downloading {original_name}",
         )
-        copyfile(f"\\\\{full_path}", local_path, connection_cache={})
 
         # need to return a file object to be used in em_file steps.
-        # grabs the local file, writes it to a temp file then renames it to the original name
-        with open(local_path, "rb") as original, tempfile.NamedTemporaryFile(
-            mode="wb", delete=False, dir=self.dir
+        with tempfile.NamedTemporaryFile(
+            mode="wb", delete=False, dir=self.local_temp_dir
         ) as data_file:
-            data_file.write(original.read())
-        os.remove(local_path)
+            copyfile(f"\\\\{full_path}", data_file.name, connection_cache={})
+
+        # overwrite existing file if needed.
+        if local_path.exists():
+            local_path.unlink()
         os.rename(data_file.name, local_path)
-        data_file.name = local_path
+
+        data_file.name = str(local_path)
         return data_file
 
     def __smb_file_exists(self, smb_path: str) -> bool:
-        """
-        Check if a file exists on an SMB share.
-
-        This is a replacement for exists function.
-        Exists was failing on some servers.
-        """
+        """Check if a file exists on an SMB share (more reliable than exists)."""
         try:
             dir_path = Path(smb_path).parent
             file_name = Path(smb_path).name
@@ -205,7 +201,7 @@ class Smb:
                 f"Failed to check if file exists.\n{e}",
             )
 
-    def read(self, file_name: str) -> List[IO[str]]:
+    def read(self, file_name: str) -> List[IO[bytes]]:
         """Read file contents of network file path.
 
         Data is loaded into a temp file.
@@ -244,10 +240,10 @@ class Smb:
                 base_dir = f"\\\\{Path(file_path.split('*')[0]).parent}"
                 file_name = str(Path(file_path).name)
                 file_list = []
-                for path, _, walk_file_list in walk(base_dir, connection_cache={}):
-                    for this_file in walk_file_list:
-                        if fnmatch.fnmatch(this_file, file_name):
-                            file_list.append(str(Path(path).joinpath(this_file)))
+                for path, _, filenames in walk(base_dir, connection_cache={}):
+                    file_list += [
+                        str(Path(path) / f) for f in filenames if fnmatch.fnmatch(f, file_name)
+                    ]
 
                 RunnerLog(
                     self.task,
@@ -278,7 +274,10 @@ class Smb:
 
     # pylint: disable=R1710
     def save(self, overwrite: int, file_name: str) -> str:  # type: ignore[return]
-        """Load data into network file path, creating location if not existing."""
+        """Upload a local file to SMB server. Will create directories if needed.
+
+        If overwrite is disabled and file exists, skips copy.
+        """
         try:
             base_path = Path(sanitize_filename(self.server_name or "")) / Path(
                 sanitize_filename(self.share_name or "")
@@ -329,7 +328,7 @@ class Smb:
 
             try:
 
-                copyfile(self.dir.joinpath(file_name), smb_path, connection_cache={})
+                copyfile(self.local_temp_dir.joinpath(file_name), smb_path, connection_cache={})
             except FileNotFoundError as e:
                 raise RunnerException(self.task, self.run_id, 10, f"Source file not found: {e}")
             except PermissionError as e:

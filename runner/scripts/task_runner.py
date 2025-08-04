@@ -95,7 +95,7 @@ class Runner:
 
         task = Task.query.filter_by(id=task_id).first()
 
-        self.source_files: List[IO[str]]
+        self.source_files: List[IO[str]] = []
         self.output_files: List[str] = []
 
         print("starting task " + str(task.id))  # noqa: T201
@@ -139,7 +139,6 @@ class Runner:
         # load file/ run query/ etc to get some sort of data or process something.
         self.query_output_size: Optional[int] = None
         self.source_loader = SourceCode(self.task, self.run_id, self.param_loader)
-        self.source_files = []
         self.__get_source()
 
         # any data post-processing
