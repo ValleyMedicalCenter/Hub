@@ -741,13 +741,12 @@ class Runner:
                 if self.query_output_size is not None
                 else Path(this_file.name).stat().st_size
             )
-
+            original_name = self.task.destination_file_name
             # get new parameters just in case it was changed in the processing script.
             params = ParamLoader(self.task, self.run_id)
 
             # rename the file so it will save off all the files
             if self.task.destination_file_name and len(self.source_files) > 1:
-                original_name = self.task.destination_file_name
                 self.task.destination_file_name = f"{Path(self.task.destination_file_name).stem}_{file_counter}{Path(self.task.destination_file_name).suffix}"
             # get file name. if no name specified in task setting, then use temp name.
             try:
@@ -853,8 +852,8 @@ class Runner:
                         overwrite=self.task.destination_smb_overwrite,
                         file_name=file_name,
                     )
-        # set the destination_file_name back to original name
-        self.task.destination_file_name = original_name
+            # set the destination_file_name back to original name
+            self.task.destination_file_name = original_name
 
     def __send_email(self) -> None:
         logs = (

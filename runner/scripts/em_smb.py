@@ -90,6 +90,7 @@ def connect(username: str, password: str, server_name: str) -> Session:
                 server=session_info["server_name"],
                 username=session_info["username"],
                 password=session_info["password"],
+                connection_cache={},
             )
         except Exception:
             conn = build_connect()
