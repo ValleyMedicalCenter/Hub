@@ -216,11 +216,11 @@ class Smb:
             base = Path(sanitize_filename(self.server_name or "")) / Path(
                 sanitize_filename(self.share_name or "")
             )
-            file_name_path = (
+            file_name_path = Path(
                 file_name.split("*")[0].strip("/") if "*" in file_name else file_name.strip("/")
             )
             conn_path = Path((self.connection.path or "").strip("/"))
-            if conn_path and conn_path in Path(file_name_path).parents:
+            if conn_path and conn_path in file_name_path.parents:
                 file_path = str(base / Path(file_name.strip("/")))
             else:
                 file_path = str(base / conn_path / Path(file_name.strip("/")))
@@ -237,7 +237,7 @@ class Smb:
                 # walk will generate file names in a directory and everything below it.
 
                 # get the path up to the *.
-                base_dir = f"\\\\{Path(file_path.split('*')[0]).parent}"
+                base_dir = f"\\\\{Path(file_path.split('*')[0]).parent if file_name.split('*')[0] else Path(file_path.split('*')[0])}"
                 file_name = str(Path(file_path).name)
                 file_list = []
                 for path, _, filenames in walk(base_dir, connection_cache={}):
