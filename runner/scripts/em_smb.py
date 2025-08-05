@@ -76,11 +76,11 @@ def connect(username: str, password: str, server_name: str) -> Session:
 
             return conn
         except LogonFailure as err:
-            raise ValueError(f"Authentication failed: {err}")
+            raise ValueError(f"Authentication failed\n{err}")
         except SMBException as err:
-            raise ValueError(f"SMB registration failed: {err}")
+            raise ValueError(f"SMB registration failed\n{err}")
         except Exception as err:
-            raise ValueError(f"Unexpected error during registration: {err}")
+            raise ValueError(f"Unexpected error during registration\n{err}")
 
     session_data = redis_client.get(redis_key)
     if session_data:
@@ -149,14 +149,11 @@ class Smb:
 
         Because we want to use existing connection we will not close them...
         """
-        try:
-            return connect(
-                str(self.username),
-                str(self.password),
-                str(self.server_name),
-            )
-        except ValueError as e:
-            raise RunnerException(self.task, self.run_id, 10, str(e))
+        return connect(
+            str(self.username),
+            str(self.password),
+            str(self.server_name),
+        )
 
     def __load_file(self, full_path: str, index: int, length: int) -> IO[bytes]:
         """Copy a file from a smb drive to a local path.
