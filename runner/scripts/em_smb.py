@@ -220,7 +220,7 @@ class Smb:
                 file_name_path = Path(file_name.strip("/")).parent
 
             conn_path = Path((self.connection.path or "").strip("/"))
-            if conn_path and file_name_path.match(conn_path):
+            if str(conn_path) != "." and file_name_path.match(conn_path):
                 file_path = str(base / Path(file_name.strip("/")))
             else:
                 file_path = str(base / conn_path / Path(file_name.strip("/")))
