@@ -81,10 +81,11 @@ def test_connection_failure(client_fixture: fixture) -> None:
     temp_dir = Path(Path(__file__).parent.parent / "temp" / "tests" / "smb")
     temp_dir.mkdir(parents=True, exist_ok=True)
 
-    with pytest.raises(ValueError) as e:
+    with pytest.raises(ValueError) as excinfo:
         s = Smb(task, None, task.source_smb_conn, temp_dir)
-        assert "Failed to connect to" in e
-        assert "Unexpected error during registration" in e
+
+    assert "Failed to connect to" in str(excinfo.value)
+    assert "Unexpected error during registration" in str(excinfo.value)
 
 
 def test_save_file(client_fixture: fixture, temp_dir: Path, smb_connection: ConnectionSmb):

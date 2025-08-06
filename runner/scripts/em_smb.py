@@ -259,8 +259,8 @@ class Smb:
 
                 # if a file was found, try to open.
                 return [
-                    self.__load_file(full_path=file_name, index=i, length=len(file_list))
-                    for i, file_name in enumerate(file_list, 1)
+                    self.__load_file(full_path=f_name, index=i, length=len(file_list))
+                    for i, f_name in enumerate(file_list, 1)
                 ]
 
             return [self.__load_file(full_path=file_path, index=1, length=1)]
