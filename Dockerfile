@@ -51,7 +51,7 @@ RUN cp web/model.py scheduler/ && cp web/model.py runner/ \
  && flask cli reset_db && flask db upgrade && flask cli seed && flask cli seed_demo
 
 # final app
-FROM python:3.11-alpine3.22
+FROM python:3.12.11-alpine3.22
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
