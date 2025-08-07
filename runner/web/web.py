@@ -10,6 +10,7 @@ from flask import current_app as app
 from flask import jsonify
 from jinja2 import Environment, PackageLoader, select_autoescape
 from pathvalidate import sanitize_filename
+from smbclient import reset_connection_cache
 from werkzeug.wrappers import Response
 
 from runner import executor
@@ -420,7 +421,8 @@ def smb_online(smb_id: int) -> str:
             smb_connection.server_name,
             cache={"conn": smb_id},
         )
-        # we do not close smb connections. they are recycled.
+        # close the connection after checking. Don't need to keep it open.
+        reset_connection_cache(connection_cache={"conn": smb_id})
         return '<span class="tag is-success is-light">Online</span>'
     except BaseException as e:
         return f'<span class="has-tooltip-arrow has-tooltip-right has-tooltip-multiline tag is-danger is-light" data-tooltip="{e}">Offline</span>'

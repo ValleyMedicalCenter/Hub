@@ -18,6 +18,7 @@ from smbclient import (
     listdir,
     makedirs,
     register_session,
+    reset_connection_cache,
     walk,
 )
 from smbclient.path import getsize
@@ -239,7 +240,7 @@ class Smb:
                 # walk will generate file names in a directory and everything below it.
 
                 # get the path up to the *.
-                base_dir = f"\\\\{Path(file_path).parent if file_name.split('*')[0] else Path(file_path.split('*')[0])}"
+                base_dir = f"\\\\{str(Path(file_path).parent).strip("*") if file_name.split('*')[0] else Path(file_path.split('*')[0])}"
                 file_name = str(Path(file_path).name)
                 file_list = []
                 for path, _, filenames in walk(base_dir, connection_cache=self.cache):
@@ -326,6 +327,7 @@ class Smb:
                     10,
                     "File already exists and will not be loaded",
                 )
+                self.__close()
                 return smb_path
 
             try:
@@ -359,7 +361,7 @@ class Smb:
                 10,
                 f"{file_size(uploaded_size)} uploaded to {server_name} server.",
             )
-
+            self.__close()
             return smb_path
 
         # pylint: disable=broad-except
@@ -367,3 +369,9 @@ class Smb:
             raise RunnerException(
                 self.task, self.run_id, 10, f"Failed to save file on server.\n{e}"
             )
+
+    def __close(self) -> None:
+        try:
+            reset_connection_cache(connection_cache=self.cache)
+        except BaseException as e:
+            raise RunnerException(self.task, self.run_id, 10, f"Failed to close connection.\n{e}")
