@@ -9,7 +9,7 @@ import os
 import pickle
 import tempfile
 from pathlib import Path
-from typing import IO, Any, Dict, List, Optional
+from typing import IO, Dict, List, Optional
 
 from flask import current_app as app
 from pathvalidate import sanitize_filename
