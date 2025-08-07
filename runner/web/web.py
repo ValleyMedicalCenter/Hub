@@ -415,14 +415,14 @@ def smb_online(smb_id: int) -> str:
     """Check if connection is online."""
     try:
         smb_connection = ConnectionSmb.query.filter_by(id=smb_id).first()
-        smb_connect(
+        sess = smb_connect(
             smb_connection.username,
             em_decrypt(smb_connection.password, app.config["PASS_KEY"]),
             smb_connection.server_name,
-            cache={"conn": smb_id},
+            cache={},
         )
         # close the connection after checking. Don't need to keep it open.
-        reset_connection_cache(connection_cache={"conn": smb_id})
+        reset_connection_cache(connection_cache={"conn": sess})
         return '<span class="tag is-success is-light">Online</span>'
     except BaseException as e:
         return f'<span class="has-tooltip-arrow has-tooltip-right has-tooltip-multiline tag is-danger is-light" data-tooltip="{e}">Offline</span>'

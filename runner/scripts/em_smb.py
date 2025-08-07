@@ -57,7 +57,7 @@ def connect(username: str, password: str, server_name: str, cache: dict) -> Sess
 
     def build_connect() -> Session:
         try:
-            conn = register_session(
+            sess = register_session(
                 server=server_name,
                 username=username,
                 password=em_decrypt(password, app.config["PASS_KEY"]),
@@ -71,6 +71,7 @@ def connect(username: str, password: str, server_name: str, cache: dict) -> Sess
                         "server_name": server_name,
                         "username": username,
                         "password": password,
+                        "cache": {"cache": sess},
                     }
                 ),
             )
@@ -91,7 +92,7 @@ def connect(username: str, password: str, server_name: str, cache: dict) -> Sess
                 server=session_info["server_name"],
                 username=session_info["username"],
                 password=session_info["password"],
-                connection_cache=cache,
+                connection_cache=session_info["cache"],
             )
         except Exception:
             conn = build_connect()
@@ -120,7 +121,6 @@ class Smb:
         self.run_id = run_id
         self.connection = connection
         self.local_temp_dir = directory
-        self.cache = {"conn": self.task.id}
 
         if self.connection is not None:
             self.share_name = str(self.connection.share_name).strip("/").strip("\\")
@@ -140,7 +140,7 @@ class Smb:
             username=app.config["SMB_USERNAME"],
             password=em_decrypt(app.config["SMB_PASSWORD"], app.config["PASS_KEY"]),
         )
-        self.conn = self.__connect()
+        self.cache = {"cache": self.__connect()}
 
     def __connect(self) -> Session:
         """Connect to SMB server.
