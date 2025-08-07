@@ -202,7 +202,7 @@ class Smb:
                 # walk will generate file names in a directory and everything below it.
 
                 # get the path up to the *.
-                base_dir = f"\\\\{str(Path(file_path).parent).strip("*") if file_name.split('*')[0] else Path(file_path.split('*')[0])}"
+                base_dir = f"\\\\{str(Path(file_path).parent).strip('*') if file_name.split('*')[0] else Path(file_path.split('*')[0])}"
                 file_name = str(Path(file_path).name)
                 file_list = []
                 for path, _, filenames in walk(base_dir, connection_cache=self.cache):
