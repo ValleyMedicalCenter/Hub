@@ -90,12 +90,10 @@
                             Filename:
                             <span class="tag is-info is-light">{{ t.source_smb_file }}</span>
                         </li>
-                        {% if t.source_smb_ignore_delimiter != 1 and t.source_smb_delimiter %}
-                            <li>
-                                Delimiter:
-                                <span class="tag is-info is-light">{{ t.source_smb_delimiter or "," }}</span>
-                            </li>
-                        {% endif %}
+                        <li>
+                            Ignore Subfolders:
+                        <span class="tag is-info is-light">{% if t.source_smb_ignore_subfolders ==1 and t.source_smb_ignore_subfolders %}True{%else%}False{% endif %}</span>
+                        </li>
                     </ul>
                 </div>
             {% endif %}

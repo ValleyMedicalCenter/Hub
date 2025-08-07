@@ -571,6 +571,7 @@ class Task(db.Model):
     source_smb_file: Mapped[Optional[str_1000]]
     source_smb_delimiter: Mapped[Optional[str_10]]
     source_smb_ignore_delimiter: Mapped[Optional[int]]
+    source_smb_ignore_subfolders: Mapped[Optional[int]]
     source_smb_id: Mapped[Optional[int]] = mapped_column(
         db.ForeignKey(ConnectionSmb.id), index=True
     )

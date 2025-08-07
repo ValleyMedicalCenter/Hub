@@ -75,20 +75,13 @@
         </div>
         <div class="field">
             <input class="is-checkradio is-info"
-                   id="task_smb_ignore_delimiter"
+                   id="task_smb_ignore_subfolders"
                    type="checkbox"
-                   {% if not t or t.source_smb_ignore_delimiter == 1 %}checked="checked"{% endif %} />
-            <label for="task_smb_ignore_delimiter">Ignore Delimiter?</label>
+                   {% if not t or t.task_smb_ignore_subfolders == 1 %}checked="checked"{% endif %} />
+            <label for="task_smb_ignore_subfolders">Ignore Delimiter?</label>
             <input type="hidden"
-                   name="task_smb_ignore_delimiter"
-                   value="{%- if not t or t.source_smb_ignore_delimiter == 1 -%} 1 {%- else -%} 0 {%- endif -%}" />
-        </div>
-        <div class="field">
-            <label class="label">Delimiter (blank defaults to comma)</label>
-            <input class="input"
-                   name="sourceSmbDelimiter"
-                   autocomplete="off"
-                   value="{{ t.source_smb_delimiter or '' }}" />
+                   name="task_smb_ignore_subfolders"
+                   value="{%- if not t or t.task_smb_ignore_subfolders == 1 -%} 1 {%- else -%} 0 {%- endif -%}" />
         </div>
     </section>
     <!--

@@ -203,12 +203,23 @@ class Smb:
 
                 # get the path up to the *.
                 base_dir = f"\\\\{str(Path(file_path).parent).strip('*') if file_name.split('*')[0] else Path(file_path.split('*')[0])}"
-                file_name = str(Path(file_path).name)
+                file_path_name = str(Path(file_path).name)
                 file_list = []
-                for path, _, filenames in walk(base_dir, connection_cache=self.cache):
-                    file_list += [
-                        str(Path(path) / f) for f in filenames if fnmatch.fnmatch(f, file_name)
-                    ]
+                if self.task.source_smb_ignore_subfolders == 1:
+                    for filenames in listdir(base_dir, connection_cache=self.cache):
+                        file_list += [
+                            # remove the \\ from the base_dir here.
+                            str(Path(base_dir.replace("\\\\", "")) / f)
+                            for f in filenames
+                            if fnmatch.fnmatch(f, file_path_name)
+                        ]
+                else:
+                    for path, _, filenames in walk(base_dir, connection_cache=self.cache):
+                        file_list += [
+                            str(Path(path) / f)
+                            for f in filenames
+                            if fnmatch.fnmatch(f, file_path_name)
+                        ]
 
                 RunnerLog(
                     self.task,
