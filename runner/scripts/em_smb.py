@@ -6,7 +6,6 @@ and helper functions to handle connection caching and restoration via Redis.
 
 import fnmatch
 import os
-import pickle
 import tempfile
 from pathlib import Path
 from typing import IO, Dict, List, Optional
@@ -32,7 +31,6 @@ from smbprotocol.exceptions import (
 )
 from smbprotocol.session import Session
 
-from runner import redis_client
 from runner.model import ConnectionSmb, Task
 from runner.scripts.em_file import file_size
 from runner.scripts.em_messages import RunnerException, RunnerLog
@@ -48,58 +46,25 @@ def connection_json(connection: Session) -> Dict:
     }
 
 
-def connect(username: str, password: str, server_name: str, cache: dict) -> Session:
+def connect(username: str, password: str, server_name: str) -> Session:
     """Connect to SMB server.
 
-    Stores connection info in Redis so future sessions can reuse existing ones.
+    Returns the session for use in connnection_cache
     """
-    redis_key = f"smb_session_{server_name}"
-
-    def build_connect() -> Session:
-        try:
-            sess = register_session(
-                server=server_name,
-                username=username,
-                password=em_decrypt(password, app.config["PASS_KEY"]),
-                connection_cache=cache,
-            )
-
-            redis_client.set(
-                redis_key,
-                pickle.dumps(
-                    {
-                        "server_name": server_name,
-                        "username": username,
-                        "password": password,
-                        "cache": {"cache": sess},
-                    }
-                ),
-            )
-
-            return conn
-        except LogonFailure as err:
-            raise ValueError(f"Authentication failed\n{err}")
-        except SMBException as err:
-            raise ValueError(f"SMB registration failed\n{err}")
-        except Exception as err:
-            raise ValueError(f"Unexpected error during registration\n{err}")
-
-    session_data = redis_client.get(redis_key)
-    if session_data:
-        try:
-            session_info = pickle.loads(session_data)
-            conn = register_session(
-                server=session_info["server_name"],
-                username=session_info["username"],
-                password=session_info["password"],
-                connection_cache=session_info["cache"],
-            )
-        except Exception:
-            conn = build_connect()
-    else:
-        conn = build_connect()
-
-    return conn
+    try:
+        sess = register_session(
+            server=server_name,
+            username=username,
+            password=em_decrypt(password, app.config["PASS_KEY"]),
+            connection_cache={},
+        )
+        return sess
+    except LogonFailure as err:
+        raise ValueError(f"Authentication failed\n{err}")
+    except SMBException as err:
+        raise ValueError(f"SMB registration failed\n{err}")
+    except Exception as err:
+        raise ValueError(f"Unexpected error during registration\n{err}")
 
 
 class Smb:
@@ -145,17 +110,14 @@ class Smb:
     def __connect(self) -> Session:
         """Connect to SMB server.
 
-        After making a connection we save it to redis. Next time we need a connection
-        we can grab if from redis and attempt to use. If it is no longer connected
-        then reconnect.
-
-        Because we want to use existing connection we will not close them...
+        After making a connection we save the session. Next time we need a connection
+        we can grab it and attempt to use. If it is no longer connected
+        then it will reconnect.
         """
         return connect(
             username=str(self.username),
             password=str(self.password),
             server_name=str(self.server_name),
-            cache=self.cache,
         )
 
     def __load_file(self, full_path: str, index: int, length: int) -> IO[bytes]:
