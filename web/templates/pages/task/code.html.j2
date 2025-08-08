@@ -55,55 +55,39 @@
     </div>
     {# prettier-ignore-start #}
         <script>
-        (function() {
-            // Wait until DOM is ready (no need for 10ms polling)
-            document.addEventListener('DOMContentLoaded', function() {
-                // Initialize once DOM is ready
-                if (typeof SimpleScrollbar !== 'undefined') {
-                    SimpleScrollbar.initAll();
-                }
-                if (typeof Prism !== 'undefined') {
-                    Prism.highlightAll();
-                }
+                 (function(){   var readyStateCheckInterval{{ rand }} = setInterval(function() {
+                        if (document.readyState === "complete") {
+                            clearInterval(readyStateCheckInterval{{ rand }});
 
-                const codeElement = document
-                    .getElementById('git_code_{{ rand }}')
-                    .querySelector('.em-codeBox pre');
+                            SimpleScrollbar.initAll();Prism.highlightAll();
 
-                // Copy function (modern API with fallback)
-                window.copyQuery{{ rand }} = function() {
-                    const code = codeElement.textContent;
-
-                    if (navigator.clipboard && navigator.clipboard.writeText) {
-                        navigator.clipboard.writeText(code).catch(err => {
-                            console.error('Clipboard copy failed', err);
-                        });
-                    } else {
-                        // Fallback for older browsers
-                        const txt = document.createElement('textarea');
-                        txt.value = code;
-                        txt.readOnly = true;
-                        txt.style.position = 'absolute';
-                        txt.style.left = '-9999px';
-                        document.body.appendChild(txt);
-                        txt.select();
-                        document.execCommand('copy');
-                        document.body.removeChild(txt);
-                    }
-                };
-
-                // Save function
-                window.saveQuery{{ rand }} = function() {
-                    const blob = new Blob([codeElement.textContent], { type: 'text/sql' });
-                    const a = document.createElement('a');
-                    a.href = URL.createObjectURL(blob);
-                    a.download = 'query.sql';
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                };
-            });
-        })();
+                            window.copyQuery{{ rand }} = function(e) {
+                                var code = document.getElementById('git_code_{{ rand }}').querySelector('.em-codeBox pre').innerText;
+                                var txt = document.createElement('textarea');
+                                txt.value = code;
+                                txt.setAttribute('readonly', '');
+                                txt.style = {
+                                  position: 'absolute',
+                                  left: '-9999px'
+                                };
+                                document.body.appendChild(txt);
+                                txt.select();
+                                document.execCommand('copy');
+                                document.body.removeChild(txt);
+                              };
+                            window.saveQuery{{ rand }} = function(e) {
+                                var a = document.createElement("a");
+                                a.href = URL.createObjectURL(new Blob([document.getElementById('git_code_{{ rand }}').querySelector('.em-codeBox pre').innerText], {
+                                    type: "text/sql"
+                                }));
+                                a.setAttribute("download", "query.sql");
+                                document.body.appendChild(a);
+                                a.click();
+                                document.body.removeChild(a);
+                              };
+                        }
+                    }, 10);
+                 })()
         </script>
         {# prettier-ignore-end #}
   {% endwith %}
