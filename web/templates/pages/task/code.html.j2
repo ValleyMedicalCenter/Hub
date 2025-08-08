@@ -1,80 +1,110 @@
 {% if code %}
-    {% with rand = code|dateHash %}
-        <div class="em-tableTools">
-            <div class="field has-addons">
-                <p class="control">
-                    <button class="button" onclick="copyQuery{{ rand }}(event)" title="copy">
-                        <span class="icon">
-                            <span class="fas fa-copy"></span>
-                        </span>
-                        <span>Copy</span>
-                    </button>
-                </p>
-                <p class="control">
-                    <button class="button" onclick="saveQuery{{ rand }}(event)" title="download">
-                        <span class="icon">
-                            <span class="fas fa-download"></span>
-                        </span>
-                        <span>Download</span>
-                    </button>
-                </p>
-                {% if cache_enabled %}
-                    <p class="control">
-                        <a class="button"
-                           title="download"
-                           href="{{ url_for('task_bp.refresh_cache', task_id=task_id) }}">
-                            <span class="icon">
-                                <span class="fas fa-rotate"></span>
-                            </span>
-                            <span>Refresh Cache</span>
-                        </a>
-                    </p>
-                {% endif %}
-            </div>
-        </div>
-        <div class="my-3 p-0 box em-codeBox line-numbers"
-             id="git_code_{{ rand }}"
-             style="height:500px">
-            <div ss-container="ss-container" class="ss-preview" style="height:100%">
-                <pre>
+  {% with rand = code|dateHash %}
+    <div class="em-tableTools">
+      <div class="field has-addons">
+        <p class="control">
+          <button
+            class="button"
+            onclick="copyQuery{{ rand }}(event)"
+            title="copy"
+          >
+            <span class="icon">
+              <span class="fas fa-copy"></span>
+            </span>
+            <span>Copy</span>
+          </button>
+        </p>
+        <p class="control">
+          <button
+            class="button"
+            onclick="saveQuery{{ rand }}(event)"
+            title="download"
+          >
+            <span class="icon">
+              <span class="fas fa-download"></span>
+            </span>
+            <span>Download</span>
+          </button>
+        </p>
+        {% if cache_enabled %}
+          <p class="control">
+            <a
+              class="button"
+              title="download"
+              href="{{ url_for('task_bp.refresh_cache', task_id=task_id) }}"
+            >
+              <span class="icon">
+                <span class="fas fa-rotate"></span>
+              </span>
+              <span>Refresh Cache</span>
+            </a>
+          </p>
+        {% endif %}
+      </div>
+    </div>
+    <div
+      class="my-3 p-0 box em-codeBox line-numbers"
+      id="git_code_{{ rand }}"
+      style="height:500px"
+    >
+      <div ss-container="ss-container" class="ss-preview" style="height:100%">
+        <pre>
 <code class="language-{{ language or 'sql' }}">{{ code }}</code>
                                                                                                 </pre>
-            </div>
-        </div>
+      </div>
+    </div>
+    {# prettier-ignore-start #}
         <script>
-                 (function(){   var readyStateCheckInterval{{ rand }} = setInterval(function() {
-                        if (document.readyState === "complete") {
-                            clearInterval(readyStateCheckInterval{{ rand }});
+        (function() {
+            // Wait until DOM is ready (no need for 10ms polling)
+            document.addEventListener('DOMContentLoaded', function() {
+                // Initialize once DOM is ready
+                if (typeof SimpleScrollbar !== 'undefined') {
+                    SimpleScrollbar.initAll();
+                }
+                if (typeof Prism !== 'undefined') {
+                    Prism.highlightAll();
+                }
 
-                            SimpleScrollbar.initAll();Prism.highlightAll();
+                const codeElement = document
+                    .getElementById('git_code_{{ rand }}')
+                    .querySelector('.em-codeBox pre');
 
-                            window.copyQuery{{ rand }} = function(e) {
-                                var code = document.getElementById('git_code_{{ rand }}').querySelector('.em-codeBox pre').innerText;
-                                var txt = document.createElement('textarea');
-                                txt.value = code;
-                                txt.setAttribute('readonly', '');
-                                txt.style = {
-                                  position: 'absolute',
-                                  left: '-9999px'
-                                };
-                                document.body.appendChild(txt);
-                                txt.select();
-                                document.execCommand('copy');
-                                document.body.removeChild(txt);
-                              };
-                            window.saveQuery{{ rand }} = function(e) {
-                                var a = document.createElement("a");
-                                a.href = URL.createObjectURL(new Blob([document.getElementById('git_code_{{ rand }}').querySelector('.em-codeBox pre').innerText], {
-                                    type: "text/sql"
-                                }));
-                                a.setAttribute("download", "query.sql");
-                                document.body.appendChild(a);
-                                a.click();
-                                document.body.removeChild(a);
-                              };
-                        }
-                    }, 10);
-                 })()
+                // Copy function (modern API with fallback)
+                window.copyQuery{{ rand }} = function() {
+                    const code = codeElement.textContent;
+
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(code).catch(err => {
+                            console.error('Clipboard copy failed', err);
+                        });
+                    } else {
+                        // Fallback for older browsers
+                        const txt = document.createElement('textarea');
+                        txt.value = code;
+                        txt.readOnly = true;
+                        txt.style.position = 'absolute';
+                        txt.style.left = '-9999px';
+                        document.body.appendChild(txt);
+                        txt.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(txt);
+                    }
+                };
+
+                // Save function
+                window.saveQuery{{ rand }} = function() {
+                    const blob = new Blob([codeElement.textContent], { type: 'text/sql' });
+                    const a = document.createElement('a');
+                    a.href = URL.createObjectURL(blob);
+                    a.download = 'query.sql';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                };
+            });
+        })();
         </script>
-    {% endwith %}
+        {# prettier-ignore-end #}
+  {% endwith %}
 {% endif %}
