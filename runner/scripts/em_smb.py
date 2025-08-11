@@ -258,7 +258,9 @@ class Smb:
                 sanitize_filename(self.share_name or "")
             )
             if self.connection is not None:
-                dest_path = str(base_path / Path(self.connection.path or "").joinpath(file_name))
+                dest_path = str(
+                    base_path / Path(self.connection.path.strip("/") or "").joinpath(file_name)
+                )
             else:
                 dest_path = str(
                     Path(
