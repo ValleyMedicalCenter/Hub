@@ -118,14 +118,14 @@
           <li>
             Filename:
             <span class="tag is-info is-light"
-              >{{ t.processing_sftp_file }}</span
+              >{{ t.processing_ftp_file }}</span
             >
           </li>
-          {% if t.processing_sftp_ignore_delimiter != 1 and t.processing_sftp_delimiter %}
+          {% if t.processing_ftp_ignore_delimiter != 1 and t.processing_ftp_delimiter %}
             <li>
               Delimiter:
               <span class="tag is-info is-light"
-                >{{ t.processing_sftp_delimiter or "," }}</span
+                >{{ t.processing_ftp_delimiter or "," }}</span
               >
             </li>
           {% endif %}
