@@ -1,108 +1,109 @@
 <!DOCTYPE html>
 <html dir="ltr" lang="en-US">
-  {% cache None %}
-    <meta charset="utf-8" />
-    <meta content="width=device-width, initial-scale=1" name="viewport" />
-    <meta name="robots" content="noindex, nofollow" />
-    <meta
-      content="Atlas Automation Hub, running tasks on schedule."
-      name="description"
-    />
-    <meta content="Christopher Pickering" name="author" />
-    <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
-    <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+  <head>
+    {% cache None %}
+      <meta charset="utf-8" />
+      <meta content="width=device-width, initial-scale=1" name="viewport" />
+      <meta name="robots" content="noindex, nofollow" />
+      <meta
+        content="Atlas Automation Hub, running tasks on schedule."
+        name="description"
+      />
+      <meta content="Christopher Pickering" name="author" />
+      <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+      <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+      <link
+        href="{{ url_for('static', filename='apple-touch-icon.png') }}"
+        rel="apple-touch-icon"
+        sizes="180x180"
+      />
+      <link
+        href="{{ url_for('static', filename='favicon-32x32.png') }}"
+        rel="icon"
+        sizes="32x32"
+        type="image/png"
+      />
+      <link
+        href="{{ url_for('static', filename='favicon-16x16.png') }}"
+        rel="icon"
+        sizes="16x16"
+        type="image/png"
+      />
+      <link
+        href="{{ url_for('static', filename='site.webmanifest') }}"
+        rel="manifest"
+      />
+      <link
+        href="{{ url_for('static', filename='favicon.ico') }}"
+        rel="shortcut icon"
+      />
+      {% assets "css" %}
+        <link type="text/css" rel="stylesheet" href="{{ ASSET_URL }}" />
+      {% endassets %}
+    {% endcache %}
+    <title>Atlas Automation Hub - {{ title }}</title>
     <link
-      href="{{ url_for('static', filename='apple-touch-icon.png') }}"
-      rel="apple-touch-icon"
-      sizes="180x180"
+      rel="preload"
+      href="{{ url_for('static', filename='fonts/inter/files/inter-latin-400-normal.woff2') }}"
+      as="font"
+      type="font/woff2"
+      crossorigin
     />
     <link
-      href="{{ url_for('static', filename='favicon-32x32.png') }}"
-      rel="icon"
-      sizes="32x32"
-      type="image/png"
+      rel="preload"
+      href="{{ url_for('static', filename='fonts/inter/files/inter-latin-500-normal.woff2') }}"
+      as="font"
+      type="font/woff2"
+      crossorigin
     />
     <link
-      href="{{ url_for('static', filename='favicon-16x16.png') }}"
-      rel="icon"
-      sizes="16x16"
-      type="image/png"
+      rel="preload"
+      href="{{ url_for('static', filename='fonts/inter/files/inter-latin-600-normal.woff2') }}"
+      as="font"
+      type="font/woff2"
+      crossorigin
     />
     <link
-      href="{{ url_for('static', filename='site.webmanifest') }}"
-      rel="manifest"
+      rel="preload"
+      href="{{ url_for('static', filename='fonts/inter/files/inter-latin-300-normal.woff2') }}"
+      as="font"
+      type="font/woff2"
+      crossorigin
     />
     <link
-      href="{{ url_for('static', filename='favicon.ico') }}"
-      rel="shortcut icon"
+      rel="preload"
+      href="{{ url_for('static', filename='fonts/inter/files/inter-latin-700-normal.woff2') }}"
+      as="font"
+      type="font/woff2"
+      crossorigin
     />
-    {% assets "css" %}
-      <link type="text/css" rel="stylesheet" href="{{ ASSET_URL }}" />
-    {% endassets %}
-  {% endcache %}
-  <title>Atlas Automation Hub - {{ title }}</title>
-  <link
-    rel="preload"
-    href="{{ url_for('static', filename='fonts/inter/files/inter-latin-400-normal.woff2') }}"
-    as="font"
-    type="font/woff2"
-    crossorigin
-  />
-  <link
-    rel="preload"
-    href="{{ url_for('static', filename='fonts/inter/files/inter-latin-500-normal.woff2') }}"
-    as="font"
-    type="font/woff2"
-    crossorigin
-  />
-  <link
-    rel="preload"
-    href="{{ url_for('static', filename='fonts/inter/files/inter-latin-600-normal.woff2') }}"
-    as="font"
-    type="font/woff2"
-    crossorigin
-  />
-  <link
-    rel="preload"
-    href="{{ url_for('static', filename='fonts/inter/files/inter-latin-300-normal.woff2') }}"
-    as="font"
-    type="font/woff2"
-    crossorigin
-  />
-  <link
-    rel="preload"
-    href="{{ url_for('static', filename='fonts/inter/files/inter-latin-700-normal.woff2') }}"
-    as="font"
-    type="font/woff2"
-    crossorigin
-  />
-  <link
-    rel="preload"
-    href="{{ url_for('static', filename='fonts/rasa/files/rasa-latin-600-normal.woff2') }}"
-    as="font"
-    type="font/woff2"
-    crossorigin
-  />
-  <link
-    rel="preload"
-    href="{{ url_for('static', filename='fonts/fontawesome/webfonts/fa-regular-400.woff2') }}"
-    as="font"
-    type="font/woff2"
-    crossorigin
-  />
-  <link
-    rel="preload"
-    href="{{ url_for('static', filename='fonts/fontawesome/webfonts/fa-solid-900.woff2') }}"
-    as="font"
-    type="font/woff2"
-    crossorigin
-  />
-  {% block head %}
-  {% endblock head %}
+    <link
+      rel="preload"
+      href="{{ url_for('static', filename='fonts/rasa/files/rasa-latin-600-normal.woff2') }}"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="{{ url_for('static', filename='fonts/fontawesome/webfonts/fa-regular-400.woff2') }}"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="{{ url_for('static', filename='fonts/fontawesome/webfonts/fa-solid-900.woff2') }}"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    {% block head %}
+    {% endblock head %}
 
-  {% block css %}
-  {% endblock css %}
-
+    {% block css %}
+    {% endblock css %}
+  </head>
   <body>
     {% if config['DEMO'] and not config["TEST"] %}
       {% include "demo.html.j2" %}
