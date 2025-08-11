@@ -206,13 +206,12 @@ class Smb:
                 file_path_name = str(Path(file_path).name)
                 file_list = []
                 if self.task.source_smb_ignore_subfolders == 1:
-                    for filenames in listdir(base_dir, connection_cache=self.cache):
-                        file_list += [
-                            # remove the \\ from the base_dir here.
-                            str(Path(base_dir.replace("\\\\", "")) / f)
-                            for f in filenames
-                            if fnmatch.fnmatch(f, file_path_name)
-                        ]
+                    for filename in listdir(base_dir, connection_cache=self.cache):
+                        if fnmatch.fnmatch(filename, file_path_name):
+                            file_list += [
+                                # remove the \\ from the base_dir here.
+                                str(Path(base_dir.replace("\\\\", "")) / filename)
+                            ]
                 else:
                     for path, _, filenames in walk(base_dir, connection_cache=self.cache):
                         file_list += [
