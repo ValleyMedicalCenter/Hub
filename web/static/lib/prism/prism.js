@@ -1,5 +1,5 @@
 /* PrismJS 1.30.0
-https://prismjs.com/download.html#themes=prism&languages=markup+css+bash+ini+json+json5+python+sql+toml */
+https://prismjs.com/download.html#themes=prism&languages=markup+css+bash+ini+properties+python+sql */
 /// <reference lib="WebWorker"/>
 
 var _self = (typeof window !== 'undefined')
@@ -1795,57 +1795,19 @@ Prism.languages.ini = {
 	'punctuation': /=/
 };
 
-// https://www.json.org/json-en.html
-Prism.languages.json = {
-	'property': {
-		pattern: /(^|[^\\])"(?:\\.|[^\\"\r\n])*"(?=\s*:)/,
+Prism.languages.properties = {
+	'comment': /^[ \t]*[#!].*$/m,
+	'value': {
+		pattern: /(^[ \t]*(?:\\(?:\r\n|[\s\S])|[^\\\s:=])+(?: *[=:] *(?! )| ))(?:\\(?:\r\n|[\s\S])|[^\\\r\n])+/m,
 		lookbehind: true,
-		greedy: true
+		alias: 'attr-value'
 	},
-	'string': {
-		pattern: /(^|[^\\])"(?:\\.|[^\\"\r\n])*"(?!\s*:)/,
-		lookbehind: true,
-		greedy: true
+	'key': {
+		pattern: /^[ \t]*(?:\\(?:\r\n|[\s\S])|[^\\\s:=])+(?= *[=:]| )/m,
+		alias: 'attr-name'
 	},
-	'comment': {
-		pattern: /\/\/.*|\/\*[\s\S]*?(?:\*\/|$)/,
-		greedy: true
-	},
-	'number': /-?\b\d+(?:\.\d+)?(?:e[+-]?\d+)?\b/i,
-	'punctuation': /[{}[\],]/,
-	'operator': /:/,
-	'boolean': /\b(?:false|true)\b/,
-	'null': {
-		pattern: /\bnull\b/,
-		alias: 'keyword'
-	}
+	'punctuation': /[=:]/
 };
-
-Prism.languages.webmanifest = Prism.languages.json;
-
-(function (Prism) {
-
-	var string = /("|')(?:\\(?:\r\n?|\n|.)|(?!\1)[^\\\r\n])*\1/;
-
-	Prism.languages.json5 = Prism.languages.extend('json', {
-		'property': [
-			{
-				pattern: RegExp(string.source + '(?=\\s*:)'),
-				greedy: true
-			},
-			{
-				pattern: /(?!\s)[_$a-zA-Z\xA0-\uFFFF](?:(?!\s)[$\w\xA0-\uFFFF])*(?=\s*:)/,
-				alias: 'unquoted'
-			}
-		],
-		'string': {
-			pattern: string,
-			greedy: true
-		},
-		'number': /[+-]?\b(?:NaN|Infinity|0x[a-fA-F\d]+)\b|[+-]?(?:\b\d+(?:\.\d*)?|\B\.\d+)(?:[eE][+-]?\d+\b)?/
-	});
-
-}(Prism));
 
 Prism.languages.python = {
 	'comment': {
@@ -1945,53 +1907,3 @@ Prism.languages.sql = {
 	'operator': /[-+*\/=%^~]|&&?|\|\|?|!=?|<(?:=>?|<|>)?|>[>=]?|\b(?:AND|BETWEEN|DIV|ILIKE|IN|IS|LIKE|NOT|OR|REGEXP|RLIKE|SOUNDS LIKE|XOR)\b/i,
 	'punctuation': /[;[\]()`,.]/
 };
-
-(function (Prism) {
-
-	var key = /(?:[\w-]+|'[^'\n\r]*'|"(?:\\.|[^\\"\r\n])*")/.source;
-
-	/**
-	 * @param {string} pattern
-	 */
-	function insertKey(pattern) {
-		return pattern.replace(/__/g, function () { return key; });
-	}
-
-	Prism.languages.toml = {
-		'comment': {
-			pattern: /#.*/,
-			greedy: true
-		},
-		'table': {
-			pattern: RegExp(insertKey(/(^[\t ]*\[\s*(?:\[\s*)?)__(?:\s*\.\s*__)*(?=\s*\])/.source), 'm'),
-			lookbehind: true,
-			greedy: true,
-			alias: 'class-name'
-		},
-		'key': {
-			pattern: RegExp(insertKey(/(^[\t ]*|[{,]\s*)__(?:\s*\.\s*__)*(?=\s*=)/.source), 'm'),
-			lookbehind: true,
-			greedy: true,
-			alias: 'property'
-		},
-		'string': {
-			pattern: /"""(?:\\[\s\S]|[^\\])*?"""|'''[\s\S]*?'''|'[^'\n\r]*'|"(?:\\.|[^\\"\r\n])*"/,
-			greedy: true
-		},
-		'date': [
-			{
-				// Offset Date-Time, Local Date-Time, Local Date
-				pattern: /\b\d{4}-\d{2}-\d{2}(?:[T\s]\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?)?\b/i,
-				alias: 'number'
-			},
-			{
-				// Local Time
-				pattern: /\b\d{2}:\d{2}:\d{2}(?:\.\d+)?\b/,
-				alias: 'number'
-			}
-		],
-		'number': /(?:\b0(?:x[\da-zA-Z]+(?:_[\da-zA-Z]+)*|o[0-7]+(?:_[0-7]+)*|b[10]+(?:_[10]+)*))\b|[-+]?\b\d+(?:_\d+)*(?:\.\d+(?:_\d+)*)?(?:[eE][+-]?\d+(?:_\d+)*)?\b|[-+]?\b(?:inf|nan)\b/,
-		'boolean': /\b(?:false|true)\b/,
-		'punctuation': /[.,=[\]{}]/
-	};
-}(Prism));

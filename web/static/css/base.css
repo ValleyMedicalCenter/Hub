@@ -73,7 +73,7 @@
 /*********** scroll preview **************/.sp-wrapper{height:100%;opacity:0;position:absolute;right:0;top:0;transition:opacity .25s linear .5s;-moz-user-select:none;-webkit-user-select:none;user-select:none;width:0}.sp-container:hover .sp-wrapper,.sp-wrapper>.sp-grabbed,.ss-grabbed~.sp-wrapper{opacity:1;transition:opacity .25s linear 0s}.sp-content{transform-origin:0 0}.sp-scroll{background-image:linear-gradient(270deg,hsla(0,0%,100%,0),hsla(0,0%,100%,.2));border-left:2px solid #e7db74;left:-2px;opacity:0;position:absolute;transition:opacity .25s linear .5s;width:100%}.sp-wrapper .sp-scroll.sp-grabbed,.sp-wrapper.sp-hover .sp-scroll,.sp-wrapper:hover .sp-scroll,.ss-scroll.ss-grabbed~.sp-wrapper .sp-scroll,.ss-scroll:hover~.sp-wrapper .sp-scroll{opacity:1;transition:opacity .25s linear 0s}.ss-content::-webkit-scrollbar{background-color:#fff;width:16px}
 
 /* PrismJS 1.30.0
-https://prismjs.com/download.html#themes=prism&languages=markup+css+bash+ini+json+json5+python+sql+toml */
+https://prismjs.com/download.html#themes=prism&languages=markup+css+bash+ini+properties+python+sql */
 /**
  * prism.js default theme for JavaScript, CSS and HTML
  * Based on dabblet (http://dabblet.com)
