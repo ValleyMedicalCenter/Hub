@@ -7,7 +7,6 @@ from urllib.parse import urlparse
 import redis
 import saml2
 import saml2.saml
-from apscheduler.jobstores.redis import RedisJobStore
 
 
 class Config:
@@ -187,35 +186,17 @@ class Config:
     }
 
     """
-        scheduler settings
+    Celery + RedBeat scheduler settings (replaces APScheduler)
     """
+    CELERY_BROKER_URL = os.environ.get("REDIS_URL", f"redis://{redis_host}:{redis_port}")
+    CELERY_RESULT_BACKEND = CELERY_BROKER_URL
+    CELERY_TIMEZONE = os.environ.get("TIMEZONE", "UTC")
+    CELERY_ENABLE_UTC = True
 
-    SCHEDULER_JOBSTORES = {
-        "default": RedisJobStore(
-            jobs_key="atlas_hub_jobs",
-            run_times_key="atlas_hub_running",
-            host=redis_host,
-            port=redis_port,
-            username=redis_user,
-            password=redis_password,
-        )
-    }
-
-    SCHEDULER_EXECUTORS = {
-        "default": {
-            "type": "threadpool",
-            "max_workers": 100,
-        }
-    }
-
-    SCHEDULER_JOB_DEFAULTS = {
-        "coalesce": True,
-        "max_instances": 50,
-        "replace_existing": True,
-        "misfire_grace_time": 30,
-    }
-
-    SCHEDULER_API_ENABLED = False
+    CELERY_BEAT_SCHEDULER = "redbeat.RedBeatScheduler"
+    REDBEAT_REDIS_URL = CELERY_BROKER_URL
+    REDBEAT_LOCK_TIMEOUT = 10
+    task_ignore_result = True
 
     """
        runner settings
@@ -361,9 +342,6 @@ class TestConfig(DevConfig):
     ASSETS_DEBUG = False
     AUTH_METHOD = "DEV"
     DEBUG = False
-    from apscheduler.executors.pool import ThreadPoolExecutor
-
-    SCHEDULER_EXECUTORS = {"default": ThreadPoolExecutor(100)}
 
     # logins for test.
     # docker run -e "ACCEPT_EULA=Y" -e "SA_PASSWORD=@Passw0rd>" -p 1433:1433 --name sql1 -h sql1  -d mcr.microsoft.com/mssql/server:2017-latest

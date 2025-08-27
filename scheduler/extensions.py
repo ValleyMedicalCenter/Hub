@@ -15,7 +15,6 @@ scripts after running :obj:`scheduler.create_app`
 
 import datetime
 
-from flask_apscheduler import APScheduler
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import String
 from sqlalchemy.orm import DeclarativeBase, mapped_column, registry
@@ -56,4 +55,3 @@ class Base(DeclarativeBase):
 
 
 db = SQLAlchemy(model_class=Base)
-atlas_scheduler = APScheduler()

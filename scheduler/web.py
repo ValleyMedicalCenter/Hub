@@ -1,16 +1,20 @@
-"""Scheduler Web API."""
+# scheduler/web.py
+"""
+Flask blueprint exposing scheduler API endpoints.
+
+Provides task listing, add, delete, run, pause, resume operations.
+"""
 
 import datetime
-import hashlib
+import logging
 import re
-import time
 from itertools import groupby
 
-from flask import Blueprint, jsonify
-from werkzeug import Response
+from flask import Blueprint, Response, jsonify
 
-from scheduler.extensions import atlas_scheduler
 from scheduler.functions import (
+    _iter_entries,
+    _next_fire_times_for_entry,
     scheduler_add_task,
     scheduler_delete_task,
     scheduler_task_runner,
@@ -20,247 +24,204 @@ from scheduler.model import Task
 web_bp = Blueprint("web_bp", __name__)
 
 
+def _task_id_from_entry(name: str) -> int | None:
+    """Extract task_id from RedBeat entry name."""
+    try:
+        _, tid, _ = name.split("-", 2)
+        return int(tid)
+    except ValueError:
+        return None
+
+
 @web_bp.route("/api")
 def alive() -> Response:
-    """Check API status."""
+    """Return a simple health check for the API."""
     return jsonify({"status": "alive"})
 
 
 @web_bp.route("/api/schedule")
-def schedule() -> Response:
-    """Build simulated run schedule.
-
-    Build list of hours to show on the chart:
-    ['now', <now + 1>, <now + 2>, etc]
-
-    Build list of schedule for next 24 hours
-
-    Merge two lists and put 0 where needed.
-    """
-    now = datetime.datetime.now(datetime.datetime.now(datetime.timezone.utc).astimezone().tzinfo)
+def schedule_view() -> Response:
+    """Return upcoming scheduled tasks within the next 24 hours."""
+    tz = datetime.datetime.now(datetime.timezone.utc).astimezone().tzinfo
+    now = datetime.datetime.now(tz)
     tomorrow = now + datetime.timedelta(hours=24)
 
     hour_list = ["now"]
+    ptr = now
+    while ptr < tomorrow:
+        ptr += datetime.timedelta(hours=1)
+        hour_list.append(ptr.strftime("%H:00"))
 
-    now_int = now
+    active = []
+    horizon = datetime.timedelta(hours=24)
 
-    while now_int < tomorrow:
-        now_int = now_int + datetime.timedelta(hours=1)
-        hour_list.append(datetime.datetime.strftime(now_int, "%-H:00"))
-
-    active_schedule = []
-
-    for job in atlas_scheduler.get_jobs():
-        if (
-            job.id in ["job_sync", "temp_clean"]
-            or not hasattr(job, "next_run_time")
-            or (job.next_run_time is None and job.args)
-        ):
+    for name, entry in _iter_entries():
+        if not re.match(r"^\d+-\d+-.+?$", name) or not entry.enabled:
             continue
+        for when in _next_fire_times_for_entry(entry, horizon):
+            msg = (
+                "now"
+                if when.replace(minute=0, second=0, microsecond=0)
+                == now.replace(minute=0, second=0, microsecond=0)
+                else when.strftime("%H:00")
+            )
+            active.append({"message": msg, "date": when})
 
-        job_date = job.next_run_time
-
-        while job_date and job_date < tomorrow:
-            if now.replace(minute=0, second=0, microsecond=0) == job_date.replace(
-                minute=0, second=0, microsecond=0
-            ):
-                message = "now"
-
-            else:
-                message = datetime.datetime.strftime(job_date, "%-H:00")
-
-            active_schedule.append({"message": message, "date": job_date})
-
-            if not job_date.tzinfo:  # pragma: no cover
-                job_date.astimezone()
-
-            job_date = job.trigger.get_next_fire_time(job_date, job_date)
-
-    active_schedule.sort(key=lambda active_schedule: active_schedule["date"])
-    groups = {
-        key: list(group)
-        for key, group in groupby(
-            active_schedule, lambda active_schedule: active_schedule["message"]
+    active.sort(
+        key=lambda a: (
+            a["date"] if isinstance(a["date"], datetime.datetime) else datetime.datetime.min
         )
-    }
-    active_schedule = []
+    )
+    groups = {k: list(g) for k, g in groupby(active, lambda a: a["message"])}
 
-    for hour in hour_list:
-        active_schedule.append(
-            {
-                "case": hour,
-                "count": (sum(1 for x in groups.get(hour)) if groups.get(hour) else 0),  # type: ignore[union-attr,misc]
-            }
-        )
-
-    return jsonify(active_schedule)
+    return jsonify([{"case": h, "count": len(groups.get(h, []))} for h in hour_list])
 
 
-@web_bp.route("/api/add/<task_id>")
+@web_bp.route("/api/add/<int:task_id>")
 def add_task(task_id: int) -> Response:
-    """Schedule task to run.
-
-    First check for any existing schedules, remove them, then add a new schedule.
-    """
-    try:
-        assert Task.query.filter_by(id=task_id).first()
-
-    # pylint: disable=broad-except
-    except BaseException as e:
-        print(str(e))  # noqa: T201
+    """Add a task to the scheduler by task ID."""
+    if not Task.query.filter_by(id=task_id).first():
         return jsonify({"error": "Invalid job."})
     try:
         scheduler_delete_task(task_id)
-
-        # all sequence logic is done on the web/executors.py level.
         if scheduler_add_task(task_id):
             return jsonify({"message": "Scheduler: task job added!"})
         return jsonify({"message": "Scheduler: failed to create job!"})
-
-    # pylint: disable=broad-except
-    except BaseException as e:
-        print(str(e))  # noqa: T201
-        return jsonify({"error": "Scheduler (add job):\n" + str(e)})
+    except Exception as exc:
+        logging.error(str(exc))
+        return jsonify({"error": f"Scheduler (add job): {exc}"})
 
 
-@web_bp.route("/api/delete/<task_id>")
+@web_bp.route("/api/delete/<int:task_id>")
 def delete_task(task_id: int) -> Response:
-    """Delete tasks schedule."""
-    try:
-        assert Task.query.filter_by(id=task_id).first()
-
-    # pylint: disable=broad-except
-    except BaseException as e:
-        print(str(e))  # noqa: T201
+    """Delete a scheduler task by task ID."""
+    if not Task.query.filter_by(id=task_id).first():
         return jsonify({"error": "Invalid job."})
-
     if scheduler_delete_task(task_id):
         return jsonify({"message": "Scheduler: task job deleted!"})
     return jsonify({"message": "Scheduler: failed to delete job!"})
 
 
-@web_bp.route("/api/run/<task_id>")
-def run_task(task_id: int) -> Response:
-    """Run task now."""
+@web_bp.route("/api/run/<int:task_id>")
+def run_task_endpoint(task_id: int) -> Response:
+    """Trigger a task immediately by task ID."""
     try:
         scheduler_task_runner(task_id)
         return jsonify({"message": "Scheduler: task job started!"})
-
-    # pylint: disable=broad-except
-    except BaseException as e:
-        return jsonify({"error": "Scheduler (run task):\n" + str(e)})
+    except Exception as exc:
+        return jsonify({"error": f"Scheduler (run task): {exc}"})
 
 
-@web_bp.route("/api/run/<task_id>/delay/<minutes>")
-def run_task_delay(task_id: int, minutes: str) -> Response:
-    """Run task in x minutes."""
-    task = Task.query.filter_by(id=task_id).first()
-    project = task.project
+@web_bp.route("/api/run/<int:task_id>/delay/<int:minutes>")
+def run_task_delay(task_id: int, minutes: int) -> Response:
+    """Schedule a task to run after a delay in minutes."""
+    from scheduler.tasks import run_task
 
-    my_hash = hashlib.sha256()
-    my_hash.update(str(time.time()).encode("utf-8"))
-
-    atlas_scheduler.add_job(
-        func=scheduler_task_runner,
-        trigger="date",
-        run_date=datetime.datetime.now() + datetime.timedelta(minutes=int(minutes)),
-        args=[str(task_id)],
-        id=str(project.id) + "-" + str(task.id) + "-" + my_hash.hexdigest()[:10],
-        name="(one off delay) " + project.name + ": " + task.name,
-    )
-
+    run_task.apply_async(args=[task_id], countdown=minutes * 60)
     return jsonify({"message": "Scheduler: task scheduled!"})
 
 
 @web_bp.route("/api/delete")
 def delete_all_tasks() -> Response:
-    """Delete all scheduled tasks."""
-    for job in atlas_scheduler.get_jobs():
-        if re.match(r"^\d+-\d+-.+?$", job.id):
-            job.remove()
-
-    return jsonify({"message": "Scheduler: all jobs deleted!"})
+    """Delete all scheduler tasks."""
+    count = 0
+    for name, entry in list(_iter_entries()):
+        if re.match(r"^\d+-\d+-.+?$", name):
+            entry.delete()
+            count += 1
+    return jsonify({"message": f"Scheduler: all jobs deleted! ({count})"})
 
 
 @web_bp.route("/api/pause")
 def pause_all_tasks() -> Response:
-    """Pause all tasks."""
-    if atlas_scheduler.running:
-        atlas_scheduler.pause()
-
-        return jsonify({"message": "Scheduler: all jobs paused!"})
-
-    return jsonify({"error": "Scheduler: scheduler not running, restart service!"})
+    """Pause all scheduler tasks."""
+    changed = 0
+    for _, entry in _iter_entries():
+        if entry.enabled:
+            entry.enabled = False
+            entry.save()
+            changed += 1
+    return jsonify({"message": f"Scheduler: all jobs paused! ({changed})"})
 
 
 @web_bp.route("/api/resume")
 def resume_all_tasks() -> Response:
-    """Resume all tasks."""
-    # pylint: disable=R1705
-    if atlas_scheduler.state == 2 and atlas_scheduler.running:
-        atlas_scheduler.resume()
-
-        return jsonify({"message": "Scheduler: all jobs resumed!"})
-
-    elif atlas_scheduler.state == 1:
-        return jsonify({"message": "Scheduler: all jobs resumed!"})
-
-    return jsonify({"error": "Scheduler: scheduler not running, restart service!"})
+    """Resume all paused scheduler tasks."""
+    changed = 0
+    for _, entry in _iter_entries():
+        if not entry.enabled:
+            entry.enabled = True
+            entry.save()
+            changed += 1
+    return jsonify({"message": f"Scheduler: all jobs resumed! ({changed})"})
 
 
 @web_bp.route("/api/kill")
-def kill() -> Response:
-    """Kill scheduler."""
-    atlas_scheduler.shutdown(wait=False)
-    return jsonify({"message": "Scheduler: scheduler killed!"})
+def kill_all_tasks() -> Response:
+    """Disable all enabled beat entries (stop requires manual process stop)."""
+    changed = 0
+    for _, entry in _iter_entries():
+        if entry.enabled:
+            entry.enabled = False
+            entry.save()
+            changed += 1
+    return jsonify(
+        {
+            "message": f"Scheduler: beat entries disabled ({changed}). Stop beat process to fully kill."
+        }
+    )
 
 
 @web_bp.route("/api/jobs")
 def get_jobs() -> Response:
-    """Get list of all job ids."""
-    return jsonify(
-        [
-            int(job.id.split("-")[1])
-            for job in atlas_scheduler.get_jobs()
-            if re.match(r"^\d+-\d+-.+?$", job.id)
-        ]
-    )
+    """Return all task IDs present in the scheduler."""
+    ids = [
+        _task_id_from_entry(name)
+        for name, _ in _iter_entries()
+        if _task_id_from_entry(name) is not None
+    ]
+    return jsonify(ids)
 
 
 @web_bp.route("/api/details")
 def get_jobs_details() -> Response:
-    """Get list of all jobs with all details."""
-    return jsonify(
-        [
-            {
-                "name": job.name,
-                "job_id": job.id,
-                "next_run_time": job.next_run_time,
-                "id": job.id.split("-")[1],
-            }
-            for job in atlas_scheduler.get_jobs()
-            if re.match(r"^\d+-\d+-.+?$", job.id)
-        ]
-    )
+    """Return details of all scheduled tasks including next run time."""
+    details = []
+    horizon = datetime.timedelta(hours=24)
+    for name, entry in _iter_entries():
+        tid = _task_id_from_entry(name)
+        if tid is None:
+            continue
+        nxt = None
+        try:
+            times = _next_fire_times_for_entry(entry, horizon)
+            nxt = times[0] if times else None
+        except Exception:
+            nxt = None
+        details.append({"name": name, "job_id": name, "next_run_time": nxt, "id": tid})
+    return jsonify(details)
 
 
 @web_bp.route("/api/scheduled")
 def get_scheduled_jobs() -> Response:
-    """Get list of all scheduled job ids."""
-    return jsonify(
-        [
-            int(job.id.split("-")[1])
-            for job in atlas_scheduler.get_jobs()
-            if job.next_run_time is not None and re.match(r"^\d+-\d+-.+?$", job.id)
-        ]
-    )
+    """Return task IDs for currently enabled tasks."""
+    ids = [
+        _task_id_from_entry(name)
+        for name, entry in _iter_entries()
+        if entry.enabled and _task_id_from_entry(name) is not None
+    ]
+    return jsonify(ids)
 
 
 @web_bp.route("/api/delete-orphans")
 def delete_orphans() -> Response:
-    """Delete all orphaned jobs."""
-    for job in atlas_scheduler.get_jobs():
-        if job.args and Task.query.filter_by(id=int(job.args[0])).count() == 0:
-            job.remove()
-
-    return jsonify({"message": "Scheduler: orphans deleted!"})
+    """Delete scheduler tasks that no longer exist in the database."""
+    removed = 0
+    for name, entry in list(_iter_entries()):
+        tid = _task_id_from_entry(name)
+        if tid is None:
+            continue
+        if Task.query.filter_by(id=tid).count() == 0:
+            entry.delete()
+            removed += 1
+    return jsonify({"message": f"Scheduler: orphans deleted! ({removed})"})
